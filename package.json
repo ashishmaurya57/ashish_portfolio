@@ -1,11 +1,12 @@
 
-"homepage": "https://ashishmaurya57.github.io/ashish_portfolio"
 
 
 {
   "name": "portfolio",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://ashishmaurya57.github.io/ashish_portfolio",
+
   "dependencies": {
     "@emailjs/browser": "^4.3.3",
     "@emotion/react": "^11.11.4",
