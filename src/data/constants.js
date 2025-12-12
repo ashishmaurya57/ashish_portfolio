@@ -13,7 +13,7 @@ export const Bio = {
     "AI & Backend Engineer at Cognio Labs, specializing in building production-ready AI-driven systems and scalable backend infrastructures. I architect and deploy end-to-end solutions using FastAPI, LangChain, and LangGraph, achieving significant performance improvements and cost optimizations. Passionate about creating innovative AI platforms and solving complex technical challenges.",
   github: "https://github.com/ashishmaurya57",
   resume:
-    "https://drive.google.com/file/d/1o_3GhXc808OFgp74_XLJGF-gKUus--a5/view?usp=sharing",
+    "https://drive.google.com/file/d/1tML9fajt0W0nL2Smf9wxZL0pasO397Y5/view?usp=drive_link",
   linkedin: "https://www.linkedin.com/in/ashish-maurya-iet-student-419788232/",
   insta: "https://www.instagram.com/ashishmauryaam57/",
   email:"ashishmauryaam57@gmail.com",
