@@ -3,14 +3,16 @@ import { darkTheme } from "./utils/Themes";
 import Navbar from "./components/Navbar";
 import { BrowserRouter } from "react-router-dom";
 import Hero from "./components/sections/Hero";
-import Skills from "./components/sections/Skills";
-import GitHubDashboard from "./components/sections/GitHubDashboard";
-import Experience from "./components/sections/Experience";
-import Education from "./components/sections/Education";
-import Projects from "./components/sections/Projects";
-import Footer from "./components/sections/Footer";
-import Coding from "./components/sections/Coding";
-import { useEffect } from "react";
+import { useEffect, Suspense, lazy } from "react";
+
+// Lazy load components below the fold to reduce initial bundle size
+const Skills = lazy(() => import("./components/sections/Skills"));
+const GitHubDashboard = lazy(() => import("./components/sections/GitHubDashboard"));
+const Experience = lazy(() => import("./components/sections/Experience"));
+const Education = lazy(() => import("./components/sections/Education"));
+const Projects = lazy(() => import("./components/sections/Projects"));
+const Footer = lazy(() => import("./components/sections/Footer"));
+const Coding = lazy(() => import("./components/sections/Coding"));
 
 const Body = styled.div`
   background: linear-gradient(to right, #006663, #111111);
@@ -34,6 +36,17 @@ const Wrapper = styled.div`
     );
   width: 100%;
   clip-path: polygon(0 0, 100% 0, 100% 100%, 30% 98%, 0 100%);
+`;
+
+// Loading fallback component
+const LoadingFallback = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  color: ${({ theme }) => theme.text_primary};
+  font-size: 18px;
+  opacity: 0.7;
 `;
 
 function App() {
@@ -69,23 +82,21 @@ function App() {
       <BrowserRouter>
         <Navbar />
         <Body>
-    
           <div>
             <Hero />
-            <Wrapper>
-              <Skills />
-              <GitHubDashboard />
-              <Experience />
-            </Wrapper>
-            <Projects />
-            <Wrapper>
-            <Coding/>
-              <Education />
-              
-            
-              
-            </Wrapper>
-            <Footer />
+            <Suspense fallback={<LoadingFallback>Loading...</LoadingFallback>}>
+              <Wrapper>
+                <Skills />
+                <GitHubDashboard />
+                <Experience />
+              </Wrapper>
+              <Projects />
+              <Wrapper>
+                <Coding />
+                <Education />
+              </Wrapper>
+              <Footer />
+            </Suspense>
           </div>
         </Body>
       </BrowserRouter>
