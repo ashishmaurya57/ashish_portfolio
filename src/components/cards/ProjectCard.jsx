@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
+import { motion } from "framer-motion";
+import { cardHover } from "../../utils/motion";
 
 const Card = styled.div`
   width: 330px;
@@ -119,7 +121,13 @@ const ProjectCard = ({ project }) => {
   const toggleRead = () => setReadMore((prev) => !prev);
 
   return (
-    <Card>
+    <motion.div
+      variants={cardHover}
+      initial="rest"
+      whileHover="hover"
+      whileTap={{ scale: 0.98 }}
+    >
+      <Card>
       {project.webapp ? (
   <IconLink href={project.webapp} target="_blank">
     <Image src={project.image} alt={project.title} />
@@ -165,6 +173,7 @@ const ProjectCard = ({ project }) => {
         )}
       </ButtonRow>
     </Card>
+    </motion.div>
   );
 };
 

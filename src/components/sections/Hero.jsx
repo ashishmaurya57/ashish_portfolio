@@ -2,7 +2,6 @@ import React from "react";
 import styled from "styled-components";
 import { Bio } from "../../data/constants";
 import Typewriter from "typewriter-effect";
-import HeroImg from "../../images/HeroImage.jpg";
 import HeroBgAnimation from "../HeroBgAnimation";
 import { Tilt } from "react-tilt";
 import { motion } from "framer-motion";
@@ -242,7 +241,16 @@ const Hero = () => {
             <HeroRightContainer>
               <motion.div {...headContentAnimation}>
                 <Tilt>
-                  <Img src={HeroImg} alt="Rishav Chanda" />
+                  <Img 
+                    src="https://lh3.googleusercontent.com/d/160jm_gqePkhj7eOe0lMsN1iMhbSueQot"
+                    alt={Bio.name}
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      // Try alternative URL format
+                      e.target.onerror = null;
+                      e.target.src = `https://drive.google.com/uc?export=download&id=160jm_gqePkhj7eOe0lMsN1iMhbSueQot`;
+                    }}
+                  />
                 </Tilt>
               </motion.div>
             </HeroRightContainer>

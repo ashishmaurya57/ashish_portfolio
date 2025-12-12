@@ -2,9 +2,11 @@ import React from "react";
 import { VerticalTimeline } from "react-vertical-timeline-component";
 import "react-vertical-timeline-component/style.min.css";
 import styled from "styled-components";
+import { motion } from "framer-motion";
 import { experiences } from "../../data/constants";
 import ExperienceCard from "../cards/ExperienceCard";
 import HeroBgAnimation from "../HeroBgAnimation";
+import { fadeInUp } from "../../utils/motion";
 
 const Container = styled.div`
   display: flex;
@@ -78,29 +80,43 @@ const Experience = () => {
   return (
     <Container id="Experience">
       <Wrapper>
-        <Title>Experience</Title>
-        <Desc
-          style={{
-            marginBottom: "40px",
-          }}
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={fadeInUp}
         >
-          My work experience as a software engineer and Ai/ML developer and working on different
-          companies and projects.
-        </Desc>
+          <Title>Experience</Title>
+          <Desc
+            style={{
+              marginBottom: "40px",
+            }}
+          >
+            My work experience as a software engineer and Ai/ML developer and working on different
+            companies and projects.
+          </Desc>
+        </motion.div>
 
-        <VerticalTimeline>
-        
-          {experiences.map((experience, index) => (
-            <ExperienceCard
-              key={index}
-              experience={experience}
-            />
-          ))}
-          <HeroBg>
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+          variants={fadeInUp}
+        >
+          <VerticalTimeline>
           
-          <HeroBgAnimation/>
-        </HeroBg>
-        </VerticalTimeline>
+            {experiences.map((experience, index) => (
+              <ExperienceCard
+                key={index}
+                experience={experience}
+              />
+            ))}
+            <HeroBg>
+            
+            <HeroBgAnimation/>
+          </HeroBg>
+          </VerticalTimeline>
+        </motion.div>
       </Wrapper>
     </Container>
   );

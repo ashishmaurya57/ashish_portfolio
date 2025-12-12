@@ -2,9 +2,11 @@ import React from "react";
 import { VerticalTimeline } from "react-vertical-timeline-component";
 import "react-vertical-timeline-component/style.min.css";
 import styled from "styled-components";
+import { motion } from "framer-motion";
 import { education } from "../../data/constants";
 import EducationCard from "../cards/EducationCard";
 import EarthCanvas from "../canvas/Earth";
+import { fadeInUp } from "../../utils/motion";
 
 const Container = styled.div`
   display: flex;
@@ -53,22 +55,43 @@ const Education = () => {
   return (
     <Container id="Education">
       <Wrapper>
-        <Title>Education</Title>
-        <Desc
-          style={{
-            marginBottom: "40px",
-          }}
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={fadeInUp}
         >
-          My education has been a journey of self-discovery and growth. My
-          educational details are as follows.
-        </Desc>
+          <Title>Education</Title>
+          <Desc
+            style={{
+              marginBottom: "40px",
+            }}
+          >
+            My education has been a journey of self-discovery and growth. My
+            educational details are as follows.
+          </Desc>
+        </motion.div>
 
-        <VerticalTimeline>
-          {education.map((education, index) => (
-            <EducationCard key={`education-${index}`} education={education} />
-          ))}
-        </VerticalTimeline>
-        <EarthCanvas />
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+          variants={fadeInUp}
+        >
+          <VerticalTimeline>
+            {education.map((education, index) => (
+              <EducationCard key={`education-${index}`} education={education} />
+            ))}
+          </VerticalTimeline>
+        </motion.div>
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={fadeInUp}
+        >
+          <EarthCanvas />
+        </motion.div>
       </Wrapper>
     </Container>
   );

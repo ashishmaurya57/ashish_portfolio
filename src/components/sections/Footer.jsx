@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "styled-components";
+import { motion } from "framer-motion";
 import { Bio } from "../../data/constants";
 import {
   GitHub,
@@ -8,6 +9,7 @@ import {
   Twitter,
   Email,
 } from "@mui/icons-material";
+import { containerVariants, itemVariants } from "../../utils/motion";
 
 const FooterContainer = styled.div`
   width: 100%;
@@ -85,32 +87,67 @@ const Copyright = styled.p`
 const Footer = () => {
   return (
     <FooterContainer>
-      <FooterWrapper>
-        <Logo>Ashish Maurya</Logo>
-        <Nav>
-          <NavLink href="#About">About</NavLink>
-          <NavLink href="#Skills">Skills</NavLink>
-          <NavLink href="#Experience">Experience</NavLink>
-          <NavLink href="#Projects">Projects</NavLink>
-          <NavLink href="#Coding">Coding</NavLink>
-          <NavLink href="#Education">Education</NavLink>
-        </Nav>
-        <SocialMediaIcons>
-          <SocialMediaIcon href={`mailto:${encodeURIComponent(Bio.email)}?subject=Subject&body=Body`} target="_blank">
-            <Email />
-          </SocialMediaIcon>
-          <SocialMediaIcon href={Bio.github} target="_blank">
-            <GitHub />
-          </SocialMediaIcon>
-          <SocialMediaIcon href={Bio.linkedin} target="_blank">
-            <LinkedIn />
-          </SocialMediaIcon>
-          <SocialMediaIcon href={Bio.insta} target="_blank">
-            <Instagram />
-          </SocialMediaIcon>
-        </SocialMediaIcons>
-        <Copyright>&copy; 2024 Ashish Maurya, All rights reserved.</Copyright>
-      </FooterWrapper>
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+      >
+        <FooterWrapper>
+          <motion.div variants={itemVariants}>
+            <Logo>Ashish Maurya</Logo>
+          </motion.div>
+          <motion.div variants={itemVariants}>
+            <Nav>
+              <NavLink href="#About">About</NavLink>
+              <NavLink href="#Skills">Skills</NavLink>
+              <NavLink href="#Experience">Experience</NavLink>
+              <NavLink href="#Projects">Projects</NavLink>
+              <NavLink href="#Coding">Coding</NavLink>
+              <NavLink href="#Education">Education</NavLink>
+            </Nav>
+          </motion.div>
+          <motion.div variants={itemVariants}>
+            <SocialMediaIcons>
+              <motion.div
+                whileHover={{ scale: 1.2, y: -5 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <SocialMediaIcon href={`mailto:${encodeURIComponent(Bio.email)}?subject=Subject&body=Body`} target="_blank">
+                  <Email />
+                </SocialMediaIcon>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.2, y: -5 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <SocialMediaIcon href={Bio.github} target="_blank">
+                  <GitHub />
+                </SocialMediaIcon>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.2, y: -5 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <SocialMediaIcon href={Bio.linkedin} target="_blank">
+                  <LinkedIn />
+                </SocialMediaIcon>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.2, y: -5 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <SocialMediaIcon href={Bio.insta} target="_blank">
+                  <Instagram />
+                </SocialMediaIcon>
+              </motion.div>
+            </SocialMediaIcons>
+          </motion.div>
+          <motion.div variants={itemVariants}>
+            <Copyright>&copy; 2024 Ashish Maurya, All rights reserved.</Copyright>
+          </motion.div>
+        </FooterWrapper>
+      </motion.div>
     </FooterContainer>
   );
 };

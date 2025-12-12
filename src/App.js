@@ -4,13 +4,13 @@ import Navbar from "./components/Navbar";
 import { BrowserRouter } from "react-router-dom";
 import Hero from "./components/sections/Hero";
 import Skills from "./components/sections/Skills";
+import GitHubDashboard from "./components/sections/GitHubDashboard";
 import Experience from "./components/sections/Experience";
 import Education from "./components/sections/Education";
-import StartCanvas from "./components/canvas/Stars";
 import Projects from "./components/sections/Projects";
-import Contact from "./components/sections/Contact";
 import Footer from "./components/sections/Footer";
 import Coding from "./components/sections/Coding";
+import { useEffect } from "react";
 
 const Body = styled.div`
   background: linear-gradient(to right, #006663, #111111);
@@ -37,6 +37,33 @@ const Wrapper = styled.div`
 `;
 
 function App() {
+  useEffect(() => {
+    // Smooth scrolling for anchor links
+    const handleSmoothScroll = (e) => {
+      const href = e.target.getAttribute('href');
+      if (href && href.startsWith('#')) {
+        e.preventDefault();
+        const element = document.querySelector(href);
+        if (element) {
+          element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+          });
+        }
+      }
+    };
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', handleSmoothScroll);
+    });
+
+    return () => {
+      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.removeEventListener('click', handleSmoothScroll);
+      });
+    };
+  }, []);
+
   return (
     <ThemeProvider theme={darkTheme}>
       <BrowserRouter>
@@ -47,6 +74,7 @@ function App() {
             <Hero />
             <Wrapper>
               <Skills />
+              <GitHubDashboard />
               <Experience />
             </Wrapper>
             <Projects />

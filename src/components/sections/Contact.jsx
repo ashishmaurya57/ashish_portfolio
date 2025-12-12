@@ -1,6 +1,8 @@
 import React, { useRef } from "react";
 import styled from "styled-components";
+import { motion } from "framer-motion";
 import emailjs from "@emailjs/browser";
+import { fadeInUp, scaleIn } from "../../utils/motion";
 
 const Container = styled.div`
   display: flex;
@@ -126,24 +128,38 @@ const Contact = () => {
       );
   };
   return (
-    <Container id="Education">
+    <Container id="Contact">
       <Wrapper>
-        <Title>Contact</Title>
-        <Desc
-          style={{
-            marginBottom: "40px",
-          }}
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={fadeInUp}
         >
-          Feel free to reach out to me for any questions or opportunities!
-        </Desc>
-        <ContactForm onSubmit={handelSubmit}>
-          <ContactTitle>Email Me 🚀</ContactTitle>
-          <ContactInput placeholder="Your Email" name="from_email" />
-          <ContactInput placeholder="Your Name" name="from_name" />
-          <ContactInput placeholder="Subject" name="subject" />
-          <ContactInputMessage placeholder="Message" name="message" rows={4} />
-          <ContactButton type="submit" value="Send" />
-        </ContactForm>
+          <Title>Contact</Title>
+          <Desc
+            style={{
+              marginBottom: "40px",
+            }}
+          >
+            Feel free to reach out to me for any questions or opportunities!
+          </Desc>
+        </motion.div>
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+          variants={scaleIn}
+        >
+          <ContactForm ref={form} onSubmit={handelSubmit}>
+            <ContactTitle>Email Me 🚀</ContactTitle>
+            <ContactInput placeholder="Your Email" name="from_email" />
+            <ContactInput placeholder="Your Name" name="from_name" />
+            <ContactInput placeholder="Subject" name="subject" />
+            <ContactInputMessage placeholder="Message" name="message" rows={4} />
+            <ContactButton type="submit" value="Send" />
+          </ContactForm>
+        </motion.div>
       </Wrapper>
     </Container>
   );
