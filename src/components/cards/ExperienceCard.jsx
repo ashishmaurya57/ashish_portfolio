@@ -1,7 +1,6 @@
 import React from "react";
 import { VerticalTimelineElement } from "react-vertical-timeline-component";
 import styled from "styled-components";
-import { experiences } from "../../data/constants";
 const Top = styled.div`
   width: 100%;
   display: flex;
@@ -142,39 +141,6 @@ const Cert = styled.div`
     }
   }
 `;
-const ResumeButton = styled.a`
-  -webkit-appearance: button;
-  -moz-appearance: button;
-  appearance: button;
-  text-decoration: none;
-
-  width:60%;
-  max-width: 200px;
-  text-align: center;
-  padding: 15px 0;
-
-  background: linear-gradient(to right, #000000, #7A7ADB);
- 
-  box-shadow: 20px 20px 60px #1f2634, -20px -20px 60px #1f2634;
-  border-radius: 50px;
-  font-weight: 600;
-  font-size: 20px;
-
-     &:hover {
-        transform: scale(1.05);
-    transition: all 0.4s ease-in-out;
-    box-shadow:  20px 20px 60px #1F2634,
-    filter: brightness(1);
-    }    
-    
-    
-    @media (max-width: 640px) {
-        padding: 12px 0;
-        font-size: 18px;
-    } 
-    color: white;
-`;
-
 const Span = styled.div`
   width: 100%;
   line-height: 1.6;

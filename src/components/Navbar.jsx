@@ -6,7 +6,6 @@ import { Bio } from "../data/constants";
 import { 
   Person, 
   Code, 
-  Assessment, 
   Work, 
   Folder, 
   School,

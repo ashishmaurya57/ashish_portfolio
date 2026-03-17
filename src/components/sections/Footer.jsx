@@ -6,7 +6,6 @@ import {
   GitHub,
   Instagram,
   LinkedIn,
-  Twitter,
   Email,
 } from "@mui/icons-material";
 import { containerVariants, itemVariants } from "../../utils/motion";
