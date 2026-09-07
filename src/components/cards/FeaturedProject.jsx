@@ -18,7 +18,7 @@ import { Chip } from "../ui/Primitives";
 
 const Entry = styled(motion.article)`
   display: grid;
-  grid-template-columns: 1.05fr 1fr;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
   gap: 48px;
   align-items: center;
   padding: 52px 0;
@@ -33,7 +33,7 @@ const Entry = styled(motion.article)`
   `}
 
   @media (max-width: 900px) {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 26px;
     padding: 38px 0;
     direction: ltr;

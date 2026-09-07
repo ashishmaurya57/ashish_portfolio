@@ -28,7 +28,7 @@ const Grid = styled(motion.div)`
   }
 
   @media (max-width: 700px) {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 `;
 

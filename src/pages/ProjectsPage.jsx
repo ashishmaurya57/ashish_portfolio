@@ -46,14 +46,14 @@ const IndexHead = styled.div`
 
 const Grid = styled(motion.div)`
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 22px;
 
   @media (max-width: 1040px) {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   @media (max-width: 680px) {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 `;
 
@@ -64,7 +64,7 @@ const ProjectsPage = () => {
   }, []);
 
   return (
-    <SectionShell as="main" id="main" $pattern="grid" style={{ paddingTop: "148px" }}>
+    <SectionShell as="main" id="main" $pattern="grid" style={{ paddingTop: "clamp(118px, 17vw, 148px)" }}>
       <SectionInner>
         <PageHeader
           eyebrow="Everything I've shipped"

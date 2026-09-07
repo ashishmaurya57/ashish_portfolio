@@ -30,12 +30,12 @@ const Inner = styled.div`
 
 const Top = styled.div`
   display: grid;
-  grid-template-columns: 1.4fr 1fr auto;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
   gap: 40px;
   align-items: start;
 
   @media (max-width: 820px) {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 32px;
   }
 `;
@@ -76,7 +76,7 @@ const LinkCol = styled.nav`
 
   div {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 8px 20px;
   }
 

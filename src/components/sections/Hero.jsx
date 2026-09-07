@@ -23,12 +23,18 @@ const Section = styled.section`
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 128px 24px 72px;
+  /* The navbar is fixed at 84px tall (68px once scrolled), so the top pad only
+     has to clear that plus a little air. It was a flat 128px / 112px, which on
+     a phone spent a sixth of the viewport on nothing before the content began.
+     Fluid means ~104px on a 390px screen and the full 128px from ~800px up,
+     with no breakpoint step in between. */
+  padding: clamp(104px, 16vw, 128px) 24px clamp(48px, 8vw, 72px);
   overflow: hidden;
   scroll-margin-top: 96px;
 
   @media (max-width: 640px) {
-    padding: 112px 18px 56px;
+    padding-left: 18px;
+    padding-right: 18px;
   }
 `;
 
@@ -58,12 +64,12 @@ const Inner = styled.div`
   width: 100%;
   max-width: 1180px;
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
   align-items: center;
   gap: 64px;
 
   @media (max-width: 980px) {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 48px;
   }
 `;
@@ -246,15 +252,27 @@ const StatsStrip = styled(motion.dl)`
   grid-column: 1 / -1;
   margin-top: 24px;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  /* minmax(0, 1fr) rather than 1fr: a bare 1fr track is minmax(auto, 1fr),
+     whose floor is the widest unbreakable child — the mono detail lines here
+     would push the track past the viewport instead of wrapping. */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1px;
   background: ${({ theme }) => theme.border};
   border: 1px solid ${({ theme }) => theme.border};
   border-radius: ${({ theme }) => theme.radius.lg};
   overflow: hidden;
 
+  /* Left is order 2 and Right is order 1 once this collapses to one column,
+     so without an explicit order this defaulted to 0 and the metrics landed
+     above the portrait *and* the headline — a bordered box of numbers as the
+     first thing on the page. They belong last, after the CTAs. */
+  @media (max-width: 980px) {
+    order: 3;
+    margin-top: 8px;
+  }
+
   @media (max-width: 780px) {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 `;
 

@@ -46,7 +46,7 @@ const PostLink = styled(Link)`
   position: relative;
   flex: 1;
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 28px;
   padding: 34px 36px;
@@ -106,7 +106,7 @@ const PostLink = styled(Link)`
   }
 
   @media (max-width: 640px) {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 18px;
     padding: 26px 22px;
   }
@@ -178,7 +178,7 @@ const Empty = styled.p`
 `;
 
 const BlogPage = () => (
-  <SectionShell as="main" id="main" $pattern="rules" style={{ paddingTop: "148px" }}>
+  <SectionShell as="main" id="main" $pattern="rules" style={{ paddingTop: "clamp(118px, 17vw, 148px)" }}>
     <SectionInner>
       <PageHeader
         eyebrow="Writing"

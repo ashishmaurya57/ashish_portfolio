@@ -16,7 +16,7 @@ import { stagger, fadeInUp, viewportOnce } from "../../utils/motion";
 
 const Grid = styled(motion.div)`
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 20px;
 
   /* Wide lead card, then three equal ones. */
@@ -34,7 +34,7 @@ const Grid = styled(motion.div)`
   }
 
   @media (max-width: 900px) {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     > * {
       grid-column: span 1 !important;
     }

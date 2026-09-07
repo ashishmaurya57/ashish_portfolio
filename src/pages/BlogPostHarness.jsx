@@ -140,7 +140,7 @@ const Steps = styled(motion.ol)`
 const Step = styled(motion.li)`
   position: relative;
   display: grid;
-  grid-template-columns: 84px 1fr;
+  grid-template-columns: 84px minmax(0, 1fr);
   gap: 28px;
   padding: 40px 0;
   border-top: 1px solid rgba(232, 217, 181, 0.18);
@@ -150,7 +150,7 @@ const Step = styled(motion.li)`
   }
 
   @media (max-width: 760px) {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 16px;
     padding: 28px 0;
   }

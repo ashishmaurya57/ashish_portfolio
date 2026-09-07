@@ -15,12 +15,12 @@ import { stagger, fadeInUp, viewportOnce } from "../../utils/motion";
 
 const Layout = styled(motion.div)`
   display: grid;
-  grid-template-columns: 1.35fr 1fr;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
   gap: 20px;
   align-items: start;
 
   @media (max-width: 900px) {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 `;
 

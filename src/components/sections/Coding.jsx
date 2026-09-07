@@ -12,15 +12,15 @@ import { stagger, fadeInUp, viewportOnce } from "../../utils/motion";
    A responsive grid shows everything at once instead. */
 const Grid = styled(motion.div)`
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 20px;
   align-items: stretch;
 
   @media (max-width: 1040px) {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   @media (max-width: 600px) {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 `;
 
