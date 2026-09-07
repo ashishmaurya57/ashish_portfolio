@@ -1,268 +1,275 @@
 import React from "react";
-import { VerticalTimelineElement } from "react-vertical-timeline-component";
 import styled from "styled-components";
-const Top = styled.div`
-  width: 100%;
-  display: flex;
-  max-width: 100%;
-  gap: 12px;
-`;
+import { motion } from "framer-motion";
+import { ArrowOutward, WorkspacePremiumOutlined } from "@mui/icons-material";
+import { Chip } from "../ui/Primitives";
 
-const Image = styled.div`
-  height: 50px;
-  width: 50px;
-  border-radius: 10px;
-  margin-top: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  font-weight: 600;
-  font-size: 18px;
-  @media only screen and (max-width: 768px) {
-    height: 40px;
-    width: 40px;
-    font-size: 14px;
+const Item = styled(motion.li)`
+  position: relative;
+  padding-left: 62px;
+  padding-bottom: 52px;
+  list-style: none;
+
+  &:last-child {
+    padding-bottom: 0;
+  }
+
+  @media (max-width: 640px) {
+    padding-left: 42px;
+    padding-bottom: 40px;
   }
 `;
 
-const CompanyImg = styled.img`
-  height: 50px;
-  width: 50px;
-  border-radius: 10px;
-  margin-top: 4px;
-  object-fit: cover;
-  @media only screen and (max-width: 768px) {
-    height: 40px;
-    width: 40px;
+/* Node on the rail. The ring is a box-shadow so it can punch through the rail
+   line without needing a wrapper element. */
+const Node = styled.div`
+  position: absolute;
+  left: 14px;
+  top: 8px;
+  width: 13px;
+  height: 13px;
+  border-radius: 999px;
+  background: ${({ theme, $current }) => ($current ? theme.bronze : theme.parchment)};
+  border: 2px solid ${({ theme, $current }) => ($current ? theme.bronze : theme.candle_faint)};
+  box-shadow: 0 0 0 5px ${({ theme }) => theme.bg};
+  z-index: 2;
+
+  @media (max-width: 640px) {
+    left: 5px;
   }
 `;
 
-const IconContainer = styled.div`
-  width: 100%;
-  height: 100%;
+const Card = styled.div`
+  position: relative;
+  padding: 28px 30px;
+  border-radius: ${({ theme }) => theme.radius.lg};
+  background: ${({ theme }) => theme.gradient.surface};
+  border: 1px solid ${({ theme }) => theme.border};
+  transition: border-color 0.35s ${({ theme }) => theme.ease.out},
+    transform 0.35s ${({ theme }) => theme.ease.out},
+    box-shadow 0.35s ${({ theme }) => theme.ease.out};
+
+  &:hover {
+    border-color: ${({ theme }) => theme.border_accent};
+    transform: translateY(-3px);
+    box-shadow: ${({ theme }) => theme.shadow.lg};
+  }
+
+  @media (max-width: 640px) {
+    padding: 22px 20px;
+  }
+`;
+
+const Head = styled.div`
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  align-items: flex-start;
+  gap: 16px;
+  padding-bottom: 18px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid ${({ theme }) => theme.border_soft};
+`;
+
+const Logo = styled.div`
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: ${({ theme }) => theme.radius.md};
+  overflow: hidden;
+  background: ${({ theme }) => theme.primary_dim};
+  border: 1px solid ${({ theme }) => theme.border};
+  color: ${({ theme }) => theme.bronze};
+  font-family: ${({ theme }) => theme.font.mono};
+  font-size: 15px;
   font-weight: 600;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+`;
+
+const HeadText = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+`;
+
+const Role = styled.h3`
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: ${({ theme }) => theme.text_primary};
+
+  @media (max-width: 640px) {
+    font-size: 21px;
+  }
+`;
+
+const Company = styled.span`
   font-size: 16px;
-  border-radius: 50%;
-`;
-
-const Body = styled.div`
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-`;
-
-const Role = styled.div`
-  font-size: 18px;
-  font-weight: 600;
-  color: ${({ theme }) => theme.text_primary};
-  @media only screen and (max-width: 768px) {
-    font-size: 14px;
-  }
-`;
-
-const Company = styled.div`
-  font-size: 14px;
   font-weight: 500;
+  color: ${({ theme }) => theme.bronze};
+`;
+
+const DateTag = styled.span`
+  margin-top: 5px;
+  font-family: ${({ theme }) => theme.font.mono};
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.text_muted};
+`;
+
+const Summary = styled.p`
+  font-size: 16px;
+  font-style: italic;
+  line-height: 1.65;
   color: ${({ theme }) => theme.text_secondary};
-  @media only screen and (max-width: 768px) {
-    font-size: 12px;
+  margin-bottom: 22px;
+`;
+
+const ProjectBlock = styled.div`
+  & + & {
+    margin-top: 24px;
+    padding-top: 22px;
+    border-top: 1px solid ${({ theme }) => theme.border_soft};
   }
 `;
 
-const Date = styled.div`
+const ProjectName = styled.h4`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  font-family: ${({ theme }) => theme.font.mono};
   font-size: 12px;
-  font-weight: 400;
-  color: ${({ theme }) => theme.text_secondary};
-  @media only screen and (max-width: 768px) {
-    font-size: 10px;
-  }
-`;
-
-const Description = styled.div`
-  width: 100%;
-  font-size: 15px;
-  font-weight: 400;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: ${({ theme }) => theme.text_primary};
-  margin-bottom: 10px;
-  line-height: 1.6;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  @media only screen and (max-width: 768px) {
-    font-size: 12px;
+
+  &::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: ${({ theme }) => theme.border};
   }
 `;
 
-const Skills = styled.div`
-  width: 100%;
+const Bullets = styled.ul`
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 15px;
-  padding-top: 15px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 `;
 
-const SkillsLabel = styled.div`
-  font-weight: 600;
-  font-size: 15px;
-  color: ${({ theme }) => theme.text_primary};
-  margin-bottom: 4px;
-  @media only screen and (max-width: 768px) {
-    font-size: 13px;
+const Bullet = styled.li`
+  position: relative;
+  padding-left: 22px;
+  font-size: 15.5px;
+  line-height: 1.7;
+  color: ${({ theme }) => theme.text_secondary};
+
+  /* Custom marker so the colour is a token, not a browser default */
+  &::before {
+    content: "";
+    position: absolute;
+    left: 3px;
+    top: 11px;
+    width: 5px;
+    height: 5px;
+    border-radius: 999px;
+    background: ${({ theme }) => theme.sepia};
   }
 `;
 
-const Cert = styled.div`
-  font-size: 15px;
-  font-weight: 600;
-  color: ${({ theme }) => theme.button};
-  text-align: center;
-  margin-top: 10px;
-
-  a {
-    display: inline-block;
-    padding: 8px 16px;
-    background-color: ${({ theme }) => theme.button};
-    color: #fff;
-    cursor: pointer; 
-    text-decoration: none;
-    border-radius: 4px;
-    transition: background-color 0.3s ease;
-
-    &:hover {
-      background-color: ${({ theme }) => theme.button_hover};
-    }
-  }
-`;
-const Span = styled.div`
-  width: 100%;
-  line-height: 1.6;
-`;
-
-const BulletPoint = styled.div`
-  margin-bottom: 10px;
-  line-height: 1.6;
-  color: ${({ theme }) => theme.text_primary};
-`;
-
-const Skill = styled.div`
-  font-size: 15px;
-  font-weight: 400;
-  color: ${({ theme }) => theme.text_primary};
-  @media only screen and (max-width: 768px) {
-    font-size: 12px;
-  }
-`;
-
-const ItemWrapper = styled.div`
+const Stack = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid ${({ theme }) => theme.border_soft};
 `;
 
-const ExperienceCard = ({ experience }) => {
-  // Get company initials
-  const getInitials = (company) => {
-    if (!company) return "?";
-    const words = company.split(" ");
-    if (words.length === 1) {
-      return words[0].substring(0, 2).toUpperCase();
-    }
-    return words.map(word => word[0]).join("").substring(0, 2).toUpperCase();
-  };
+const CertLink = styled.a`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  font-family: ${({ theme }) => theme.font.mono};
+  font-size: 12.5px;
+  font-weight: 500;
+  color: ${({ theme }) => theme.bronze};
+
+  svg {
+    font-size: 16px;
+  }
+
+  &:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+`;
+
+/** One entry in the experience rail. `current` highlights the live role. */
+const ExperienceCard = ({ experience, variants, current = false }) => {
+  const initials = (experience?.company || "?")
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
-    <VerticalTimelineElement
-      icon={
-        <IconContainer>
-          {experience?.img ? (
-            <img 
-              src={experience.img} 
-              alt={experience.company}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                borderRadius: "50%"
-              }}
-            />
-          ) : (
-            getInitials(experience?.company)
-          )}
-        </IconContainer>
-      }
-      contentStyle={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "12px",
-        background: "#1d1836",
-        color: "#fff",
-        boxShadow: "rgba(23, 92, 230, 0.15) 0px 4px 24px",
-        backgroundColor: "rgba(17, 25, 40, 0.83)",
-        border: "1px solid rgba(255, 255, 255, 0.125)",
-        borderRadius: "6px",
-        padding: "20px",
-        maxWidth: "100%",
-        wordWrap: "break-word",
-        overflowWrap: "break-word",
-      }}
-      contentArrowStyle={{
-        borderRight: "7px solid rgba(255, 255, 255, 0.3)",
-      }}
-      date={experience?.date}
-    >
-      <Top>
-        {experience?.img ? (
-          <CompanyImg src={experience.img} alt={experience.company} />
-        ) : (
-          <Image>
-            {getInitials(experience?.company)}
-          </Image>
-        )}
-        <Body>
-          <Role>{experience?.role}</Role>
-          <Company>{experience?.company}</Company>
-          <Date>{experience?.date}</Date>
-        </Body>
-      </Top>
-      <Description>
-        {experience?.desc && (
-          <Span>
-            {experience.desc.split('\n').map((line, index) => (
-              line.trim() && (
-                <BulletPoint key={index}>
-                  {line.trim()}
-                </BulletPoint>
-              )
-            ))}
-          </Span>
-        )}
-        {experience?.skills && (
-          <Skills>
-            <SkillsLabel>Skills</SkillsLabel>
-            <ItemWrapper>
-              {experience?.skills?.map((skill, index) => (
-                <Skill key={index}>• {skill}</Skill>
+    <Item variants={variants}>
+      <Node $current={current} aria-hidden="true" />
+      <Card>
+        <Head>
+          <Logo>{initials}</Logo>
+          <HeadText>
+            <Role>{experience?.role}</Role>
+            <Company>{experience?.company}</Company>
+            <DateTag>{experience?.date}</DateTag>
+          </HeadText>
+        </Head>
+
+        {experience?.summary && <Summary>{experience.summary}</Summary>}
+
+        {experience?.projects?.map((project, i) => (
+          <ProjectBlock key={project.name || `block-${i}`}>
+            {/* A single-product role has no sub-heading to show */}
+            {project.name && <ProjectName>{project.name}</ProjectName>}
+            <Bullets>
+              {project.bullets.map((b, bi) => (
+                <Bullet key={bi}>{b}</Bullet>
               ))}
-            </ItemWrapper>
-            {experience?.doc && (
-              <Cert>
-                <a href={experience.doc} target="_blank" rel="noopener noreferrer">
-                  Certificate
-                </a>
-              </Cert>
-            )}
-          </Skills>
+            </Bullets>
+          </ProjectBlock>
+        ))}
+
+        {experience?.skills?.length > 0 && (
+          <Stack>
+            {experience.skills.map((s) => (
+              <Chip key={s}>{s}</Chip>
+            ))}
+          </Stack>
         )}
-      </Description>
-    </VerticalTimelineElement>
+
+        {experience?.doc && (
+          <CertLink href={experience.doc} target="_blank" rel="noreferrer">
+            <WorkspacePremiumOutlined /> Certificate{" "}
+            <ArrowOutward style={{ fontSize: 13 }} />
+          </CertLink>
+        )}
+      </Card>
+    </Item>
   );
 };
 

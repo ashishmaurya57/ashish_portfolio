@@ -1,0 +1,139 @@
+\documentclass{resume}
+
+\usepackage[left=0.4in,top=0.1in,right=0.4in,bottom=0.1in]{geometry}
+\usepackage{multicol}
+\usepackage{titlesec}
+
+\titleformat{\rSection}{\normalfont\Large\bfseries}{}{0em}{}
+\titlespacing{\rSection}{0pt}{*0.0}{*0.0}
+
+\name{ASHISH MAURYA}
+\address{\textbf{Location:} Gaziabad, India \textbar\hspace{.7mm}\textbf{Phone:} 9517009645 \textbar\hspace{.7mm}\textbf{Email:}
+\href{mailto:ashishmauryaam57@gmail.com}{ashishmauryaam57@gmail.com}}
+\address{\href{https://www.linkedin.com/in/ashish-maurya-iet-student-419788232/}{LinkedIn} \textbar\hspace{.7mm}
+\href{https://ashish-portfolio-olive.vercel.app/}{Portfolio} \textbar\hspace{.7mm}
+\href{https://github.com/ashishmaurya57}{GitHub}}
+
+\begin{document}
+\footnotesize
+
+%----------------------------------------------------------------------------------------
+%    SUMMARY
+%----------------------------------------------------------------------------------------
+\vspace{-.8em}
+
+
+%----------------------------------------------------------------------------------------
+%    WORK EXPERIENCE
+%----------------------------------------------------------------------------------------
+\vspace{-.8em}
+\begin{rSection}{Work Experience}
+\vspace{-1.3em}
+
+\item \textbf{AI \& BACKEND ENGINEER \textbar\hspace{.7mm} COGNIO LABS \textbar\hspace{.7mm}\href{https://cognio.so/about}{Link}} \hfill \textbf{July 2025 --
+ Present}
+\begin{itemize}
+    \item \textbf{Druidix -- Agentic AI Platform \textbar\hspace{.7mm}\href{https://druidx.co/}{Link}}
+    \begin{itemize}
+        \item Built the \textbf{agentic harness} behind Druidix's autonomous \textbf{``computer-use'' agent}: a \textbf{persistent virtual file system}
+with per-artifact \textbf{metadata} generating \textbf{16 artifact types} (PDFs, slides, docs) in isolated \textbf{E2B/Vercel sandboxes}.
+        \item Designed a \textbf{verify $\rightarrow$ self-repair} loop with \textbf{progressive context loading}, wrapped in a \textbf{middleware
+guardrail layer} (\textbf{token-budget} limits, \textbf{automated eval harness}) that cut invalid/failed agent outputs by \textbf{[X]\%}.
+        \item Shipped a \textbf{vertical-agent provisioning} flow -- business-type onboarding auto-assigns specialized sub-agents (\textbf{SEO},
+\textbf{lead generation}) that run and inter-communicate autonomously under a \textbf{supervisor orchestrator agent} with \textbf{guardrails} and
+validation checks.
+        \item Engineered a \textbf{horizontally scalable} \textbf{Postgres} job queue (\texttt{SKIP LOCKED} claiming, lease/heartbeat reclaim,
+idempotent dedupe keys) delivering \textbf{at-least-once delivery with exactly-once effects} across \textbf{auto-scaled}, \textbf{rate-limited}
+worker pools split by job type (\textbf{doc-processing}, \textbf{embeddings}, \textbf{Telegram/Slack} channel adapters, and \textbf{cron}-triggered
+agent runs); added \textbf{Prometheus} + \textbf{LangSmith} observability and \textbf{SSE} token streaming.
+        \item Implemented \textbf{hybrid RAG} (\textbf{BM25/SPLADE} sparse + dense fused via \textbf{RRF} on \textbf{Qdrant}), lifting relevance by
+\textbf{[X]\%} on keyword/identifier queries where dense-only retrieval confused near-duplicate documents.
+    \end{itemize}
+
+    \item \textbf{Storyform / Be-Olivia -- AI Jewellery Design Platform}
+    \begin{itemize}
+        \item \textbf{Architected} the production \textbf{3-service system} (Express + TypeScript, FastAPI, React) on \textbf{GCP Cloud Run} with
+\textbf{Terraform} IaC and \textbf{GitHub Actions} CI; independently designed \textbf{GDPR-aligned} backend security (encryption, access control, data
+minimization).
+        \item Built text/image $\rightarrow$ \textbf{3D mesh} pipeline using \textbf{Gemini} + \textbf{Tripo3D} with a \textbf{Trimesh}-based DFM
+validator, hitting a \textbf{97.7\%} manufacturability pass rate; Node API on \textbf{Prisma/PostgreSQL}, \textbf{Redis}, \textbf{better-auth}, \textbf{Stripe}, and \textbf{GCS signed URLs}.
+    \end{itemize}
+
+\end{itemize}
+
+\item \textbf{SOFTWARE DEVELOPMENT INTERN \textbar\hspace{.7mm} HASHEDBIT INNOVATIONS
+\textbar\hspace{.7mm}\href{https://drive.google.com/file/d/1Q6l-CuH0VBkHkjfgwOHjLWbstiqjEasm/view?usp=sharing}{Link}} \hfill \textbf{June 2024 -- Sept 2024}
+\begin{itemize}
+    \item Engineered responsive UI components with \textbf{React.js}, HTML, CSS, and JavaScript, reducing page load time by \textbf{28\%} and improving engagement for \textbf{1,000+} users.
+    \item Redesigned \textbf{CRUD APIs} with \textbf{Node.js} and \textbf{Express.js}; optimized SQL queries and indexing to cut average API response time by \textbf{36\%} (\textbf{500ms} $\rightarrow$ \textbf{320ms}).
+\end{itemize}
+
+\end{rSection}
+
+%----------------------------------------------------------------------------------------
+%    PROJECTS
+%----------------------------------------------------------------------------------------
+\vspace{-0.7em}
+\begin{rSection}{Projects}
+\vspace{-1.3em}
+
+\item \textbf{VidyaLabs -- AI EdTech Platform \textbar\hspace{.7mm}\href{https://vidyalabs.org}{Link}}
+\begin{itemize}
+    \item Built a \textbf{multilingual voice assistant} on a \textbf{LangGraph}-orchestrated agent with an \textbf{intent-routing node} that classifies
+user queries and dispatches them to the right sub-flow -- \textbf{Hybrid RAG} retrieval, direct Q\&A, or \textbf{automatic web search} -- backed by a
+\textbf{stateful memory-management} layer that persists context across turns for coherent multi-turn tutoring, serving \textbf{[N]+} students.
+    \item Enabled teachers to auto-generate \textbf{assessments, assignments \& worksheets} aligned to school curriculum via \textbf{Hybrid RAG} at
+\textbf{[X]\%} answer accuracy, cutting content-prep time by \textbf{[Y]\%}.
+    \item Built an \textbf{auto-weakness-detection} pipeline that analyzes assessment results to surface student knowledge gaps and drives
+\textbf{personalized AI tutoring}; added \textbf{multimodal output} with dynamic \textbf{flowchart \& diagram generation} for visual concept explanation.
+\end{itemize}
+
+\end{rSection}
+
+%----------------------------------------------------------------------------------------
+%    SKILLS
+%----------------------------------------------------------------------------------------
+\vspace{-0.5em}
+\begin{rSection}{Skills}
+\vspace{-0.5em}
+\newcommand{\skillrow}[2]{%
+  \noindent\hangindent=1.2em\hangafter=1\textbf{#1:} #2\par\vspace{1pt}%
+}
+\skillrow{AI/ML \& GenAI}{LangChain, LangGraph, LangSmith, HuggingFace, Hybrid RAG, BM25/SPLADE/RRF, Vector Search, Prompt Engineering, Agentic AI, A2A, MCP, Tool Calling, Computer-Use Agents, E2B Sandboxes, LiveKit}
+\skillrow{Backend \& API}{FastAPI, Node.js, Express,  Prisma ORM, Pydantic,REST APIs, System Design, Distributed Systems}
+\skillrow{Databases}{PostgreSQL, MongoDB, MySQL, Redis, Qdrant}
+\skillrow{Cloud \& DevOps}{GCP , Docker, Terraform, GitHub Actions, Grafana, Prometheus}
+\skillrow{Auth \& Payments}{better-auth, OAuth, JWT, Stripe}
+\skillrow{Languages}{Python, TypeScript, JavaScript, C++, SQL}
+\end{rSection}
+
+%----------------------------------------------------------------------------------------
+%    EDUCATION
+%----------------------------------------------------------------------------------------
+\vspace{-0.5em}
+\begin{rSection}{Education}
+\vspace{-0.8em}
+{\bf Institute of Engineering and Technology} \hfill {Lucknow, Uttar Pradesh}\\
+B.Tech -- Computer Science and Engineering (AI); CGPA: 8.37/10 \hfill {2025}
+
+{\bf St. Joseph's School} \hfill {Gorakhpur, Uttar Pradesh}\\
+Intermediate (Class 12); Percentage: 88.6\% \hfill {April 2018 -- June 2019}
+\end{rSection}
+
+%----------------------------------------------------------------------------------------
+%    ACHIEVEMENTS
+%----------------------------------------------------------------------------------------
+\vspace{-0.5em}
+\begin{rSection}{Achievements \& Certifications}
+\vspace{-1.0em}
+\begin{itemize}
+    \item \textbf{LeetCode Knight} -- Highest rating \textbf{1869}, solved \textbf{400+} DSA problems; Global Rank \textbf{1432} in LeetCode Weekly Contest
+386. \href{https://leetcode.com/ashishmaurya57/}{Link}
+    \item \textbf{CodeChef 3-Star} -- Max rating \textbf{1680}; Global Rank \textbf{271} in CodeChef Starter 103 (25k+ participants).
+\href{https://www.codechef.com/users/ashishmauryaam/}{Link}
+    \item \textbf{Sparkathon -- Walmart} -- National-level hackathon participant.
+\href{https://drive.google.com/file/d/1re8RvOVG5tHVU3uq0T-axogW52Jzgyfj/view?usp=sharing}{Certificate}
+\end{itemize}
+\end{rSection}
+
+\end{document}

@@ -1,165 +1,188 @@
 import React from "react";
 import styled from "styled-components";
 import { motion } from "framer-motion";
-import { cardHover } from "../../utils/motion";
+import { ArrowOutward } from "@mui/icons-material";
+import { getIcon } from "../ui/icons";
+import TiltCard from "../ui/TiltCard";
+
+/*
+ * Platform logo, drawn as a vector icon rather than a remote PNG.
+ *
+ * The previous version pointed at raw.githubusercontent.com images that
+ * either 404'd or were blocked by the browser — an icon that silently fails
+ * to load just leaves a blank white plate, which is worse than no logo at
+ * all. react-icons ships the exact brand mark as an inline SVG bundled into
+ * the app, so it always renders and always matches the theme.
+ */
+
+const Shell = styled(motion.a)`
+  display: block;
+  height: 100%;
+`;
 
 const Card = styled.div`
-  width: 280px;
-  height: auto;
-  min-height: 280px;
-  background-color: #171721;
-  border-radius: 16px;
-  box-shadow: 0 0 12px 4px rgba(0, 0, 0, 0.4);
-  padding: 24px;
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 16px;
-  transition: all 0.3s ease-in-out;
-  position: relative;
-  overflow: visible; /* Changed to visible to help with popping out */
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  
-  flex-shrink: 0;
+  height: 100%;
+  padding: 26px 24px;
+  border-radius: ${({ theme }) => theme.radius.lg};
+  background: ${({ theme }) => theme.gradient.surface};
+  border: 1px solid ${({ theme }) => theme.border};
+  transition: border-color 0.35s ${({ theme }) => theme.ease.out},
+    box-shadow 0.35s ${({ theme }) => theme.ease.out};
 
   &:hover {
-    transform: translateY(-10px);
-    /* Removed blue border color */
-    box-shadow: 0 0 50px 4px rgba(0, 0, 0, 0.6);
-    filter: brightness(1.1);
+    border-color: ${({ theme }) => theme.border_accent};
+    box-shadow: ${({ theme }) => theme.shadow.lg};
   }
 `;
 
-const LogoWrapper = styled.div`
-  width: 80px;
-  height: 80px;
-  background: white;
-  border-radius: 50%;
+const Head = styled.div`
   display: flex;
-  justify-content: center;
   align-items: center;
-  box-shadow: 0 0 10px rgba(0,0,0,0.2);
-  margin-bottom: 8px;
-  border: 3px solid #171721;
+  gap: 13px;
 `;
 
-const Image = styled.img`
-  width: 60%;
-  height: 60%;
-  object-fit: contain;
+const Logo = styled.div`
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: ${({ theme }) => theme.primary_dim};
+  border: 1px solid ${({ theme }) => theme.border_accent};
+  color: ${({ theme }) => theme.bronze};
+
+  svg {
+    width: 22px;
+    height: 22px;
+  }
 `;
 
-const Details = styled.div`
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-`;
-
-const Title = styled.div`
-  font-size: 20px;
-  font-weight: 700;
-  color: #FFFFFF;
-  text-align: center;
-`;
-
-const RatingContainer = styled.div`
-  background: rgba(133, 76, 230, 0.1);
-  padding: 6px 16px;
-  border-radius: 20px;
-  border: 1px solid rgba(133, 76, 230, 0.4);
-  margin-bottom: 10px;
+const Name = styled.h3`
+  font-size: 16.5px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.text_primary};
 `;
 
 const Rating = styled.div`
-  font-size: 14px;
-  font-weight: 600;
-  color: #a46dff;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+
+  strong {
+    font-family: ${({ theme }) => theme.font.display};
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: ${({ theme }) => theme.text_primary};
+  }
+  span {
+    font-family: ${({ theme }) => theme.font.mono};
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: ${({ theme }) => theme.text_muted};
+  }
 `;
 
-const Description = styled.div`
-  width: 100%;
-`;
-
-const SkillList = styled.ul`
-  list-style: none;
-  padding: 0;
+const Achievements = styled.ul`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 9px;
+  margin: 0;
+  padding: 16px 0 0;
+  list-style: none;
+  border-top: 1px solid ${({ theme }) => theme.border};
 `;
 
-const SkillItem = styled.li`
-  font-size: 13px;
-  font-weight: 400;
-  color: rgba(255, 255, 255, 0.7);
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  text-align: left;
-  
-  &:before {
-    content: "•";
-    color: #854CE6;
-    font-size: 18px;
-    line-height: 14px;
-    font-weight: bold;
+const Achievement = styled.li`
+  position: relative;
+  padding-left: 18px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: ${({ theme }) => theme.text_secondary};
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: 1px;
+    top: 8px;
+    width: 5px;
+    height: 5px;
+    border-radius: 999px;
+    background: ${({ theme }) => theme.bronze};
   }
 `;
 
-const getPlatformLogo = (platform) => {
-  const p = platform?.toLowerCase() || "";
-  
-  if (p.includes("leetcode")) {
-    return "https://upload.wikimedia.org/wikipedia/commons/1/19/LeetCode_logo_black.png";
-  } else if (p.includes("codechef")) {
-    return "https://i.pinimg.com/originals/c5/d9/fc/c5d9fc1e18bcf039f464c2ab6cfb3eb6.jpg";
-  } else if (p.includes("codeforces")) {
-    return "https://cdn.iconscout.com/icon/free/png-256/free-codeforces-3628695-3029920.png";
-  } else if (p.includes("hackerrank")) {
-    return "https://upload.wikimedia.org/wikipedia/commons/4/40/HackerRank_Icon-1000px.png";
-  } else if (p.includes("geeks") || p.includes("gfg")) { 
-    return "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/GeeksforGeeks.svg/256px-GeeksforGeeks.svg.png";
-  }
-  
-  return "https://cdn-icons-png.flaticon.com/512/1005/1005141.png"; 
-};
+const Visit = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 16px;
+  font-family: ${({ theme }) => theme.font.mono};
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.text_muted};
+  transition: color 0.25s ${({ theme }) => theme.ease.out};
 
-const CodingCard = ({ project }) => {
-  const logoUrl = getPlatformLogo(project.palteform); 
+  svg {
+    font-size: 14px;
+  }
+
+  ${Card}:hover & {
+    color: ${({ theme }) => theme.bronze};
+  }
+`;
+
+const CodingCard = ({ project, variants }) => {
+  const Icon = getIcon(project.icon);
 
   return (
-    <motion.div
-      variants={cardHover}
-      initial="rest"
-      whileHover="hover"
-      whileTap={{ scale: 0.98 }}
+    <Shell
+      href={project.link}
+      target="_blank"
+      rel="noreferrer"
+      variants={variants}
+      aria-label={`${project.platform} profile`}
     >
-      <a href={project.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+      <TiltCard max={7} glare={false} style={{ height: "100%" }}>
         <Card>
-          <LogoWrapper>
-            <Image src={logoUrl} alt={project.palteform} />
-          </LogoWrapper>
-          
-          <Details>
-            <Title>{project.palteform}</Title>
-            
-            <RatingContainer>
-                <Rating>Max Rating: {project.rating}</Rating>
-            </RatingContainer>
+          <Head>
+            <Logo>
+              <Icon aria-hidden="true" />
+            </Logo>
+            <Name>{project.platform}</Name>
+          </Head>
 
-            <Description>
-              <SkillList>
-                {project?.acheive?.map((skill, index) => (
-                  <SkillItem key={index}>{skill}</SkillItem>
-                ))}
-              </SkillList>
-            </Description>
-          </Details>
+          {project.rating ? (
+            <Rating>
+              <strong>{project.rating}</strong>
+              <span>peak rating</span>
+            </Rating>
+          ) : (
+            <Rating>
+              <strong>—</strong>
+              <span>practice</span>
+            </Rating>
+          )}
+
+          <Achievements>
+            {project?.acheive?.map((a, i) => (
+              <Achievement key={i}>{a}</Achievement>
+            ))}
+          </Achievements>
+
+          <Visit>
+            View profile <ArrowOutward />
+          </Visit>
         </Card>
-      </a>
-    </motion.div>
+      </TiltCard>
+    </Shell>
   );
 };
 

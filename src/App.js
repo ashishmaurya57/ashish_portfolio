@@ -1,104 +1,97 @@
+import React, { Suspense, lazy } from "react";
 import styled, { ThemeProvider } from "styled-components";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { darkTheme } from "./utils/Themes";
+
 import Navbar from "./components/Navbar";
-import { BrowserRouter } from "react-router-dom";
-import Hero from "./components/sections/Hero";
-import { useEffect, Suspense, lazy } from "react";
+import ScrollProgress from "./components/ui/ScrollProgress";
+import Home from "./pages/Home";
 
-// Lazy load components below the fold to reduce initial bundle size
-const Skills = lazy(() => import("./components/sections/Skills"));
-const GitHubDashboard = lazy(() => import("./components/sections/GitHubDashboard"));
-const Experience = lazy(() => import("./components/sections/Experience"));
-const Education = lazy(() => import("./components/sections/Education"));
-const Projects = lazy(() => import("./components/sections/Projects"));
+const ProjectsPage = lazy(() => import("./pages/ProjectsPage"));
+const BlogPage = lazy(() => import("./pages/BlogPage"));
+const BlogPostHarness = lazy(() => import("./pages/BlogPostHarness"));
 const Footer = lazy(() => import("./components/sections/Footer"));
-const Coding = lazy(() => import("./components/sections/Coding"));
 
-const Body = styled.div`
-  background: linear-gradient(to right, #006663, #111111);
-  
+const Page = styled.div`
+  position: relative;
   width: 100%;
   overflow-x: hidden;
-  position: relative;
-`;
-
-const Wrapper = styled.div`
-  padding-bottom: 100px;
-  background: linear-gradient(
-      38.73deg,
-      rgba(204, 0, 187, 0.15) 0%,
-      rgba(201, 32, 184, 0) 50%
-    ),
-    linear-gradient(
-      141.27deg,
-      rgba(0, 70, 209, 0) 50%,
-      rgba(0, 70, 209, 0.15) 100%
-    );
-  width: 100%;
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 30% 98%, 0 100%);
-`;
-
-// Loading fallback component
-const LoadingFallback = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 200px;
+  /* Deliberately transparent. index.css paints the parchment on <body> and
+     then lays a fixed halftone grain and a warm vignette over it — an opaque
+     background here is painted later in tree order and was covering both, so
+     the page was rendering as flat cream instead of printed stock. */
+  background: transparent;
   color: ${({ theme }) => theme.text_primary};
-  font-size: 18px;
-  opacity: 0.7;
 `;
+
+/* Reserves height while a lazy route/chunk loads so the page does not jump (CLS). */
+const Fallback = styled.div`
+  min-height: 60vh;
+  display: grid;
+  place-items: center;
+  color: ${({ theme }) => theme.text_muted};
+  font-family: ${({ theme }) => theme.font.mono};
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+`;
+
+const SkipLink = styled.a`
+  position: absolute;
+  left: -9999px;
+  top: 12px;
+  z-index: 2000;
+  padding: 12px 20px;
+  border-radius: ${({ theme }) => theme.radius.md};
+  background: ${({ theme }) => theme.primary};
+  color: ${({ theme }) => theme.parchment};
+  font-weight: 600;
+
+  /* Only surfaces for keyboard users, which is exactly who needs it */
+  &:focus {
+    left: 16px;
+  }
+`;
+
+/** Every route change should land at the top of the new page, not wherever
+    the previous page happened to be scrolled to. A hash link (e.g. Home's
+    "/#experience") is the one case that should NOT jump to top — Home's own
+    scroll-to-hash effect handles that instead. */
+function ScrollToTop() {
+  const { pathname, hash } = useLocation();
+  React.useEffect(() => {
+    if (hash) return;
+    // "auto" here means "jump immediately" per the spec — "instant" is not a
+    // valid value for the Window.scrollTo options and silently no-ops.
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, [pathname, hash]);
+  return null;
+}
 
 function App() {
-  useEffect(() => {
-    // Smooth scrolling for anchor links
-    const handleSmoothScroll = (e) => {
-      const href = e.target.getAttribute('href');
-      if (href && href.startsWith('#')) {
-        e.preventDefault();
-        const element = document.querySelector(href);
-        if (element) {
-          element.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-          });
-        }
-      }
-    };
-
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', handleSmoothScroll);
-    });
-
-    return () => {
-      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.removeEventListener('click', handleSmoothScroll);
-      });
-    };
-  }, []);
-
   return (
     <ThemeProvider theme={darkTheme}>
       <BrowserRouter>
+        <ScrollToTop />
+        <SkipLink href="#main">Skip to content</SkipLink>
+        <ScrollProgress />
         <Navbar />
-        <Body>
-          <div>
-            <Hero />
-            <Suspense fallback={<LoadingFallback>Loading...</LoadingFallback>}>
-              <Wrapper>
-                <Skills />
-                <GitHubDashboard />
-                <Experience />
-              </Wrapper>
-              <Projects />
-              <Wrapper>
-                <Coding />
-                <Education />
-              </Wrapper>
-              <Footer />
-            </Suspense>
-          </div>
-        </Body>
+
+        <Page>
+          <Suspense fallback={<Fallback>Loading…</Fallback>}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/projects" element={<ProjectsPage />} />
+              <Route path="/blog" element={<BlogPage />} />
+              <Route path="/blog/engineering-the-agent-harness" element={<BlogPostHarness />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
+
+          <Suspense fallback={null}>
+            <Footer />
+          </Suspense>
+        </Page>
       </BrowserRouter>
     </ThemeProvider>
   );

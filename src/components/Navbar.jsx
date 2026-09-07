@@ -1,360 +1,495 @@
-import React, { useState, useEffect } from "react";
-import { Link as LinkR } from "react-router-dom";
-import styled from "styled-components"; // Removed useTheme since we are hardcoding dark mode
+import React, { useState, useEffect, useCallback } from "react";
+import styled from "styled-components";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bio } from "../data/constants";
-import { 
-  Person, 
-  Code, 
-  Work, 
-  Folder, 
-  School,
-  MenuRounded,
-  GitHub,
-  LinkedIn,
-  Email
-} from "@mui/icons-material";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { GitHub, LinkedIn, Close, MenuRounded, ArrowOutward } from "@mui/icons-material";
+import { Bio, navLinks } from "../data/constants";
+import Magnetic from "./ui/Magnetic";
 
-// --- Styled Components ---
-
-const Nav = styled(motion.div)`
-  /* Match the body gradient background */
-  background: linear-gradient(to right, rgba(0, 102, 99, 0.95), rgba(17, 17, 17, 0.95));
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  height: 80px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-  position: sticky;
+const Nav = styled(motion.header)`
+  position: fixed;
   top: 0;
-  z-index: 1000;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
-  @media screen and (max-width: 960px) {
-    transition: 0.8s all ease;
-  }
+  left: 0;
+  right: 0;
+  z-index: 1100;
+  display: flex;
+  justify-content: center;
+  transition: background 0.35s ${({ theme }) => theme.ease.out},
+    border-color 0.35s ${({ theme }) => theme.ease.out};
+
+  /* Transparent over the hero, then a solid glass bar once scrolled — so the
+     nav never competes with the headline but stays readable over content. */
+  background: ${({ $scrolled }) => ($scrolled ? "rgba(242, 235, 221, 0.88)" : "transparent")};
+  backdrop-filter: ${({ $scrolled }) => ($scrolled ? "blur(16px) saturate(150%)" : "none")};
+  -webkit-backdrop-filter: ${({ $scrolled }) => ($scrolled ? "blur(16px) saturate(150%)" : "none")};
+  border-bottom: 1px solid
+    ${({ $scrolled, theme }) => ($scrolled ? theme.border : "transparent")};
 `;
 
-const NavbarContainer = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  height: 60px;
-  z-index: 1;
+const Container = styled.div`
   width: 100%;
+  max-width: 1320px;
+  height: ${({ $scrolled }) => ($scrolled ? "68px" : "84px")};
   padding: 0 24px;
-  max-width: 1200px;
-  position: relative;
-`;
-
-const NavLogo = styled(LinkR)`
   display: flex;
   align-items: center;
-  justify-self: flex-start;
-  cursor: pointer;
-  text-decoration: none;
-  z-index: 2;
-`;
+  justify-content: space-between;
+  gap: 20px;
+  transition: height 0.35s ${({ theme }) => theme.ease.out};
 
-const LogoText = styled.span`
-  font-weight: 700;
-  font-size: 24px;
-  color: white; /* Fallback */
-  background: linear-gradient(225deg, #854CE6 0%, #a46dff 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  filter: drop-shadow(0px 0px 5px rgba(133, 76, 230, 0.5));
-`;
-
-// --- The Center Menu (Dark Glass) ---
-const NavMenu = styled(motion.div)`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  
-  /* Hardcoded Dark Background with blur */
-  background: rgba(25, 25, 36, 0.85); 
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  
-  padding: 6px 8px;
-  border-radius: 50px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  
-  @media screen and (max-width: 960px) {
-    display: none;
+  @media (max-width: 640px) {
+    padding: 0 18px;
   }
 `;
 
-const NavItem = styled.li`
-  list-style: none;
-  position: relative;
-  cursor: pointer;
-`;
-
-const NavLink = styled.a`
+const Brand = styled.a`
   display: flex;
   align-items: center;
-  gap: 8px;
-  
-  /* FORCE WHITE TEXT */
-  color: rgba(255, 255, 255, 0.8); 
-  
-  font-weight: 500;
-  text-decoration: none;
-  padding: 10px 16px;
-  border-radius: 50px;
-  font-size: 14px;
-  transition: all 0.2s ease-in-out;
-  position: relative;
-  z-index: 1;
-
-  &:hover {
-    color: #ffffff;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-  }
-`;
-
-const ActivePill = styled(motion.div)`
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, rgba(133, 76, 230, 0.2) 0%, rgba(133, 76, 230, 0.1) 100%);
-  border-radius: 50px;
-  z-index: 0;
-  border: 1px solid rgba(133, 76, 230, 0.3);
-`;
-
-// --- Right Side Buttons ---
-const ButtonContainer = styled.div`
-  width: auto;
-  height: 100%;
-  display: flex;
-  justify-content: end;
-  align-items: center;
-  padding: 0 6px;
   gap: 12px;
-  z-index: 2;
-  
-  /* Ensure they are visible on larger screens */
-  @media screen and (max-width: 960px) {
-    display: none;
-  }
+  flex-shrink: 0;
 `;
 
-const SocialButton = styled(motion.a)`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.1); /* Slight white tint for visibility */
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  
-  /* FORCE ICON COLOR TO WHITE */
-  color: #ffffff !important; 
-  
-  transition: all 0.2s ease-in-out;
-  text-decoration: none;
-
-  &:hover {
-    background: ${({ color }) => color || "#854CE6"};
-    transform: translateY(-2px);
-    box-shadow: 0 0 10px ${({ color }) => color || "#854CE6"};
-    border-color: transparent;
-  }
+const Monogram = styled.span`
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: ${({ theme }) => theme.gradient.accent};
+  color: ${({ theme }) => theme.parchment};
+  font-family: ${({ theme }) => theme.font.mono};
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  box-shadow: ${({ theme }) => theme.shadow.accent};
 `;
 
-const MobileIcon = styled.div`
-  display: none;
-  @media screen and (max-width: 960px) {
-    display: block;
-    position: absolute;
-    top: 0;
-    right: 0;
-    transform: translate(-100%, 60%);
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: #ffffff; /* Force white */
-  }
-`;
-
-const MobileMenu = styled(motion.div)`
+const BrandText = styled.span`
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 16px;
-  position: absolute;
-  top: 80px;
-  right: 0;
-  width: 100%;
-  padding: 24px 40px 24px 40px;
-  background: rgba(25, 25, 36, 0.95); /* Dark background */
-  backdrop-filter: blur(10px);
-  border-radius: 0 0 20px 20px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-  z-index: 999;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-`;
+  line-height: 1.2;
 
-const MobileLink = styled(LinkR)`
-  color: white;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  text-decoration: none;
-  font-size: 18px;
+  strong {
+    font-family: ${({ theme }) => theme.font.display};
+    font-size: 15px;
+    font-weight: 600;
+    color: ${({ theme }) => theme.text_primary};
+  }
+  small {
+    font-family: ${({ theme }) => theme.font.mono};
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: ${({ theme }) => theme.text_muted};
+  }
 
-  &:hover {
-    color: #854CE6;
+  @media (max-width: 520px) {
+    display: none;
   }
 `;
 
-const navItems = [
-  { href: '#About', label: 'About', icon: Person, name: 'About' },
-  { href: '#Skills', label: 'Skills', icon: Code, name: 'Skills' },
-  { href: '#Experience', label: 'Experience', icon: Work, name: 'Experience' },
-  { href: '#Projects', label: 'Projects', icon: Folder, name: 'Projects' },
-  { href: '#Education', label: 'Education', icon: School, name: 'Education' },
-];
+const Menu = styled.nav`
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 5px;
+  border-radius: ${({ theme }) => theme.radius.pill};
+  border: 1px solid ${({ theme }) => theme.border};
+  background: rgba(247, 241, 228, 0.72);
+  backdrop-filter: blur(10px);
+
+  @media (max-width: 1024px) {
+    display: none;
+  }
+`;
+
+const MenuLink = styled.a`
+  position: relative;
+  padding: 9px 16px;
+  border-radius: ${({ theme }) => theme.radius.pill};
+  font-size: 14px;
+  font-weight: 500;
+  color: ${({ $active, theme }) => ($active ? theme.ink : theme.text_secondary)};
+  transition: color 0.25s ${({ theme }) => theme.ease.out};
+
+  &:hover {
+    color: ${({ theme }) => theme.text_primary};
+  }
+
+  span {
+    position: relative;
+    z-index: 1;
+  }
+`;
+
+const Pill = styled(motion.span)`
+  position: absolute;
+  inset: 0;
+  border-radius: ${({ theme }) => theme.radius.pill};
+  background: ${({ theme }) => theme.primary_dim};
+  border: 1px solid ${({ theme }) => theme.border_accent};
+  z-index: 0;
+`;
+
+const Actions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+`;
+
+const IconLink = styled.a`
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid ${({ theme }) => theme.border};
+  background: rgba(36, 29, 19, 0.02);
+  color: ${({ theme }) => theme.text_secondary};
+  transition: all 0.25s ${({ theme }) => theme.ease.out};
+
+  svg {
+    font-size: 19px;
+  }
+
+  &:hover {
+    color: ${({ theme }) => theme.bronze};
+    border-color: ${({ theme }) => theme.border_accent};
+    background: ${({ theme }) => theme.primary_dim};
+  }
+
+  @media (max-width: 1024px) {
+    display: none;
+  }
+`;
+
+const ResumeCta = styled.a`
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: ${({ theme }) => theme.radius.pill};
+  background: ${({ theme }) => theme.text_primary};
+  color: ${({ theme }) => theme.bg};
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.25s ${({ theme }) => theme.ease.out};
+
+  svg {
+    font-size: 15px;
+  }
+
+  &:hover {
+    background: ${({ theme }) => theme.primary};
+    color: ${({ theme }) => theme.parchment};
+  }
+
+  @media (max-width: 1024px) {
+    display: none;
+  }
+`;
+
+const Burger = styled.button`
+  display: none;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid ${({ theme }) => theme.border};
+  background: rgba(36, 29, 19, 0.03);
+  color: ${({ theme }) => theme.text_primary};
+  cursor: pointer;
+
+  @media (max-width: 1024px) {
+    display: grid;
+  }
+`;
+
+const Drawer = styled(motion.div)`
+  position: fixed;
+  inset: 0;
+  z-index: 1150;
+  background: rgba(242, 235, 221, 0.985);
+  backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  padding: 96px 28px 40px;
+  gap: 4px;
+  overflow-y: auto;
+`;
+
+const DrawerLink = styled(motion.a)`
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 15px 4px;
+  border-bottom: 1px solid ${({ theme }) => theme.border};
+  font-family: ${({ theme }) => theme.font.display};
+  font-size: 25px;
+  font-weight: 500;
+  color: ${({ theme }) => theme.text_primary};
+
+  em {
+    font-family: ${({ theme }) => theme.font.mono};
+    font-size: 12px;
+    font-style: normal;
+    color: ${({ theme }) => theme.primary};
+  }
+`;
+
+const DrawerFoot = styled.div`
+  margin-top: auto;
+  display: flex;
+  gap: 12px;
+  padding-top: 28px;
+
+  a {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 50px;
+    border-radius: ${({ theme }) => theme.radius.md};
+    border: 1px solid ${({ theme }) => theme.border};
+    color: ${({ theme }) => theme.text_primary};
+    font-size: 14px;
+    font-weight: 600;
+  }
+`;
+
+const CloseBtn = styled.button`
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid ${({ theme }) => theme.border};
+  background: transparent;
+  color: ${({ theme }) => theme.text_primary};
+  cursor: pointer;
+`;
 
 const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState('About');
+  const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(navLinks[0].id);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const onBlog = location.pathname.startsWith("/blog");
 
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY + 200;
-      for (const item of navItems) {
-        const element = document.getElementById(item.name);
-        if (element) {
-          const offsetTop = element.offsetTop;
-          const offsetHeight = element.offsetHeight;
-          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
-            setActiveSection(item.name);
-          }
-        }
-      }
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Scroll-spy via IntersectionObserver rather than measuring offsets on every
+  // scroll frame — it stays correct when sections resize or images load late.
+  //
+  // Navbar lives outside <Routes> and never unmounts, but Home's sections are
+  // lazy-loaded and get torn down and rebuilt every time the route leaves and
+  // returns to "/" — so this has to re-run on every navigation to Home, and
+  // retry for a moment on each run since the target elements may not exist
+  // yet when a lazy chunk is still loading.
+  useEffect(() => {
+    if (location.pathname !== "/") return undefined;
+
+    let observer;
+    let timer;
+    let attempts = 0;
+    let cancelled = false;
+
+    const setup = () => {
+      if (cancelled) return;
+      const sections = navLinks.map((l) => document.getElementById(l.id)).filter(Boolean);
+      if (sections.length < navLinks.length && attempts < 40) {
+        attempts += 1;
+        timer = setTimeout(setup, 150);
+        return;
+      }
+      if (!sections.length) return;
+
+      observer = new IntersectionObserver(
+        (entries) => {
+          const visible = entries
+            .filter((e) => e.isIntersecting)
+            .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+          if (visible) setActive(visible.target.id);
+        },
+        { rootMargin: "-45% 0px -50% 0px", threshold: [0, 0.25, 0.5, 1] }
+      );
+      sections.forEach((s) => observer.observe(s));
+    };
+
+    setup();
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      observer?.disconnect();
+    };
+  }, [location.pathname]);
+
+  // A drawer that lets the page scroll behind it feels broken, and Escape must close it.
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    const onKey = (e) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  // Anchors only exist on Home. From any other route, navigate to Home with
+  // the hash attached — Home's own scroll-to-hash effect finishes the job
+  // once its lazy sections have mounted.
+  const go = useCallback(
+    (e, href) => {
+      e.preventDefault();
+      setOpen(false);
+      if (location.pathname !== "/") {
+        navigate("/" + href);
+        return;
+      }
+      const el = document.querySelector(href);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    },
+    [location.pathname, navigate]
+  );
+
   return (
-    <Nav
-        initial={{ y: -100 }}
+    <>
+      <Nav
+        $scrolled={scrolled}
+        initial={{ y: -90 }}
         animate={{ y: 0 }}
-        transition={{ duration: 0.5 }}
-    >
-      <NavbarContainer>
-        <NavLogo to="/">
-          <LogoText>Ashish Maurya</LogoText>
-        </NavLogo>
-
-        <MobileIcon onClick={() => setIsOpen(!isOpen)}>
-          <MenuRounded sx={{ color: 'white', fontSize: '2rem' }} />
-        </MobileIcon>
-
-        <NavMenu>
-          {navItems.map((item) => {
-            const isActive = activeSection === item.name;
-            const Icon = item.icon;
-            return (
-              <NavItem key={item.name}>
-                <NavLink 
-                    href={item.href}
-                    onClick={() => setActiveSection(item.name)}
-                >
-                  {isActive && (
-                    <ActivePill
-                      layoutId="activePill"
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    />
-                  )}
-                  <span style={{ 
-                      position: 'relative', 
-                      display: 'flex', 
-                      alignItems:'center', 
-                      gap:'6px', 
-                      zIndex: 1, 
-                      color: isActive ? '#FFFFFF' : 'rgba(255,255,255,0.7)' 
-                  }}>
-                    <Icon sx={{ fontSize: 18 }} />
-                    {item.label}
-                  </span>
-                </NavLink>
-              </NavItem>
-            );
-          })}
-        </NavMenu>
-
-        <ButtonContainer>
-          <SocialButton 
-            href={Bio.github} 
-            target="_blank" 
-            color="#000000" // Hover color black for Github
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <Container $scrolled={scrolled}>
+          <Brand
+            as={Link}
+            to="/"
+            onClick={() => setOpen(false)}
+            aria-label="Ashish Maurya, back to top"
           >
-            <GitHub sx={{ fontSize: 22 }} />
-          </SocialButton>
-          
-          <SocialButton 
-            href={Bio.linkedin} 
-            target="_blank" 
-            color="#0077b5" // Hover color blue for LinkedIn
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <LinkedIn sx={{ fontSize: 22 }} />
-          </SocialButton>
+            <Monogram>AM</Monogram>
+            <BrandText>
+              <strong>Ashish Maurya</strong>
+              <small>{Bio.title}</small>
+            </BrandText>
+          </Brand>
 
-           <SocialButton 
-            href={`mailto:${Bio.email}`}
-            color="#EA4335" // Hover color red for Email
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Email sx={{ fontSize: 22 }} />
-          </SocialButton>
-        </ButtonContainer>
+          <Menu aria-label="Section navigation">
+            {navLinks.map((link) => (
+              <MenuLink
+                key={link.id}
+                href={link.href}
+                $active={active === link.id}
+                aria-current={active === link.id ? "true" : undefined}
+                onClick={(e) => go(e, link.href)}
+              >
+                {active === link.id && (
+                  <Pill
+                    layoutId="nav-pill"
+                    transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                  />
+                )}
+                <span>{link.label}</span>
+              </MenuLink>
+            ))}
+            <MenuLink as={Link} to="/blog" $active={onBlog} aria-current={onBlog ? "true" : undefined}>
+              {onBlog && (
+                <Pill
+                  layoutId="nav-pill"
+                  transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                />
+              )}
+              <span>Blog</span>
+            </MenuLink>
+          </Menu>
 
-        <AnimatePresence>
-          {isOpen && (
-            <MobileMenu
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
+          <Actions>
+            <Magnetic strength={0.25}>
+              <IconLink href={Bio.github} target="_blank" rel="noreferrer" aria-label="GitHub profile">
+                <GitHub />
+              </IconLink>
+            </Magnetic>
+            <Magnetic strength={0.25}>
+              <IconLink href={Bio.linkedin} target="_blank" rel="noreferrer" aria-label="LinkedIn profile">
+                <LinkedIn />
+              </IconLink>
+            </Magnetic>
+            <Magnetic strength={0.2}>
+              <ResumeCta href={Bio.resume} target="_blank" rel="noreferrer">
+                Resume <ArrowOutward />
+              </ResumeCta>
+            </Magnetic>
+            <Burger onClick={() => setOpen(true)} aria-label="Open navigation menu" aria-expanded={open}>
+              <MenuRounded />
+            </Burger>
+          </Actions>
+        </Container>
+      </Nav>
+
+      <AnimatePresence>
+        {open && (
+          <Drawer
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.28 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation menu"
+          >
+            <CloseBtn onClick={() => setOpen(false)} aria-label="Close navigation menu">
+              <Close />
+            </CloseBtn>
+            {navLinks.map((link, i) => (
+              <DrawerLink
+                key={link.id}
+                href={link.href}
+                onClick={(e) => go(e, link.href)}
+                initial={{ opacity: 0, x: -18 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.05 + i * 0.05 }}
+              >
+                <em>{String(i + 1).padStart(2, "0")}</em>
+                {link.label}
+              </DrawerLink>
+            ))}
+            <DrawerLink
+              as={Link}
+              to="/blog"
+              onClick={() => setOpen(false)}
+              initial={{ opacity: 0, x: -18 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.05 + navLinks.length * 0.05 }}
             >
-              {navItems.map((item) => (
-                <MobileLink 
-                    key={item.name} 
-                    to={item.href} 
-                    onClick={() => setIsOpen(false)}
-                >
-                  {item.label}
-                </MobileLink>
-              ))}
-              <div style={{display:'flex', gap: '12px', marginTop: '10px'}}>
-                  <SocialButton href={Bio.github} target="_blank"><GitHub /></SocialButton>
-                  <SocialButton href={Bio.linkedin} target="_blank"><LinkedIn /></SocialButton>
-                  <SocialButton href={`mailto:${Bio.email}`}><Email /></SocialButton>
-              </div>
-            </MobileMenu>
-          )}
-        </AnimatePresence>
-
-      </NavbarContainer>
-    </Nav>
+              <em>{String(navLinks.length + 1).padStart(2, "0")}</em>
+              Blog
+            </DrawerLink>
+            <DrawerFoot>
+              <a href={Bio.github} target="_blank" rel="noreferrer">
+                <GitHub fontSize="small" /> GitHub
+              </a>
+              <a href={Bio.linkedin} target="_blank" rel="noreferrer">
+                <LinkedIn fontSize="small" /> LinkedIn
+              </a>
+            </DrawerFoot>
+          </Drawer>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 
