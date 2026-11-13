@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowBackRounded } from "@mui/icons-material";
 import { getIcon } from "../components/ui/icons";
+import FlowDiagram from "../components/ui/FlowDiagram";
 import { harness } from "../data/constants";
 import { stagger, fadeInUp, popIn, viewportOnce } from "../utils/motion";
 
@@ -225,6 +226,90 @@ const Value = styled.p`
   }
 `;
 
+/* Array-shaped `value`: the callout becomes a div of paragraphs. The inner
+   <p>s pick up StepBody's paragraph rule, exactly as the single-<p> callout
+   already does, so both shapes look the same apart from the breaks. */
+const ValueParas = styled(Value)`
+  p + p {
+    margin-top: 10px;
+  }
+`;
+
+/* One headed section inside a point (body block). */
+const Block = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  & + & {
+    margin-top: 10px;
+  }
+
+  h3 {
+    font-family: ${({ theme }) => theme.font.display};
+    font-size: clamp(18px, 2vw, 21px);
+    font-weight: 600;
+    color: ${({ theme }) => theme.candle};
+  }
+
+  ul {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    max-width: 68ch;
+  }
+
+  li {
+    position: relative;
+    padding-left: 22px;
+    font-size: 16px;
+    line-height: 1.7;
+    color: ${({ theme }) => theme.candle_faint};
+  }
+
+  /* Same marker as the experience bullets, in the night palette */
+  li::before {
+    content: "";
+    position: absolute;
+    left: 3px;
+    top: 11px;
+    width: 5px;
+    height: 5px;
+    border-radius: ${({ theme }) => theme.radius.pill};
+    background: ${({ theme }) => theme.candle_faint};
+  }
+`;
+
+const PointFlow = styled(FlowDiagram)`
+  margin: 10px 0 6px;
+`;
+
+const Overview = styled(FlowDiagram)`
+  margin: -24px 0 64px;
+`;
+
+/* `body` may be a plain string (rendered exactly as before) or an array of
+   { heading?, text?, list? } blocks. */
+const renderBody = (body) => {
+  if (!Array.isArray(body)) return <p>{body}</p>;
+  return body.map((block, bi) => (
+    <Block key={block.heading || bi}>
+      {block.heading && <h3>{block.heading}</h3>}
+      {block.text && <p>{block.text}</p>}
+      {block.list?.length > 0 && (
+        <ul>
+          {block.list.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      )}
+    </Block>
+  ));
+};
+
 const Guardrails = styled.div`
   margin-top: 6px;
 
@@ -410,10 +495,16 @@ const BlogPostHarness = () => (
           <span>{harness.readTime}</span>
           <span>Updated {harness.updated}</span>
         </MetaRow>
-        <Intro variants={fadeInUp} initial="hidden" animate="visible">
-          {harness.intro}
-        </Intro>
+        {(Array.isArray(harness.intro) ? harness.intro : [harness.intro]).map(
+          (para) => (
+            <Intro key={para} variants={fadeInUp} initial="hidden" animate="visible">
+              {para}
+            </Intro>
+          )
+        )}
       </Head>
+
+      {harness.overviewFlow && <Overview flow={harness.overviewFlow} />}
 
       <Steps
         variants={stagger(0.1)}
@@ -433,14 +524,24 @@ const BlogPostHarness = () => (
               </Marker>
               <StepBody>
                 <h2>{point.title}</h2>
-                <p>{point.body}</p>
+                {renderBody(point.body)}
 
-                {point.value && (
-                  <Value>
-                    <strong>Why it matters</strong>
-                    {point.value}
-                  </Value>
-                )}
+                {point.flow && <PointFlow flow={point.flow} />}
+
+                {point.value &&
+                  (Array.isArray(point.value) ? (
+                    <ValueParas as="div">
+                      <strong>Why it matters</strong>
+                      {point.value.map((para) => (
+                        <p key={para}>{para}</p>
+                      ))}
+                    </ValueParas>
+                  ) : (
+                    <Value>
+                      <strong>Why it matters</strong>
+                      {point.value}
+                    </Value>
+                  ))}
 
                 {point.guardrails?.length > 0 && (
                   <Guardrails>

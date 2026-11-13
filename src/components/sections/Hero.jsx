@@ -485,8 +485,8 @@ const Hero = () => {
                   animate={prefersReduced ? undefined : { y: [0, -8, 0] }}
                   transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
                 >
-                  <small>Currently building</small>
-                  <strong>Vertical-agent provisioning</strong>
+                  <small>Focus area</small>
+                  <strong>Agent harness engineering</strong>
                 </FloatCard>
               </PortraitFrame>
             </TiltCard>

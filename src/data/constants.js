@@ -18,7 +18,7 @@ export const Bio = {
   ],
   tagline: "I build the harness around autonomous agents, and the backend that keeps them cheap.",
   description:
-    "AI & Backend Engineer at Cognio Labs. I build the harness that lets agents run long and stay correct — a persistent virtual filesystem, a verify-then-self-repair loop with progressive context loading, and a guardrail layer that cut invalid agent output by 30%. Most of my work sits underneath that: Postgres job queues, auto-scaled worker pools, and the distributed systems that keep it affordable at scale.",
+    "AI & Backend Engineer at Cognio Labs. I build the harness that lets agents run long and stay correct — a persistent virtual filesystem, a verify-and-replan loop with anchored context summaries, and a guardrail layer that cut invalid agent output by 30%. Most of my work sits underneath that: Postgres job queues, sleep/wake worker pools with per-tenant lanes, and the distributed systems that keep it affordable at scale.",
   github: "https://github.com/ashishmaurya57",
   resume:
     "https://drive.google.com/file/d/1NxS50Bloj2pa91jS3soC7kEF8XjPLFvT/view?usp=sharing",
@@ -71,15 +71,41 @@ export const harness = {
   dek: "Architecture notes",
   readTime: "11 min read",
   updated: "November 2026",
-  intro:
-    "Most agent demos die on the second tool call. The harness — everything around the model: state, control loop, context management, budgets, review and infrastructure — is what makes multi-step agent work actually finish. These are the patterns I implemented and what each one fixed in production: real file state for every agent, a verify-and-replan loop, context that is summarised instead of replayed, handoffs between agents that are checked rather than trusted, a durable job queue underneath, and hybrid retrieval. Together, the guardrail layer cut invalid or failed agent output by 30%.",
+  intro: [
+    "Most agent demos die on the second tool call. The harness — everything around the model: state, control loop, context management, budgets, review and infrastructure — is what makes multi-step agent work actually finish.",
+    "These are the patterns I implemented and what each one fixed in production: real file state for every agent, a verify-and-replan loop, context that is summarised instead of replayed, handoffs between agents that are checked rather than trusted, a durable job queue underneath, and hybrid retrieval. Together, the guardrail layer cut invalid or failed agent output by 30%.",
+  ],
+  overviewFlow: {
+    caption: "How one run moves through the harness",
+    steps: [
+      { label: "Task", note: "a goal and a written brief" },
+      { label: "Plan", note: "break the work into steps" },
+      { label: "Act", note: "tools run in a sandbox, files are saved" },
+      { label: "Verify", note: "check the step's result", branch: "Fails → the real error goes back to Plan (max 2 retries)" },
+      { label: "Review", note: "owed files exist and the rubric passes", branch: "Misses → back with the reviewer's notes" },
+      { label: "Done", note: "report written, job marked complete" },
+    ],
+    footer: "Always running underneath: context summaries at 70% · per-run budgets · durable job queue · hybrid retrieval",
+  },
   points: [
     {
       id: "filesystem",
       title: "A persistent virtual filesystem, not a scratch buffer",
       icon: "TbBoxMultiple",
-      body:
-        "A computer-use agent shouldn't just emit text — it should write to a real filesystem inside an isolated sandbox microVM (Vercel Sandbox or E2B). Every artifact it produces is saved with a permanent storage key and lineage metadata — which earlier artifact it was derived from — so a later step, or a later session, can find it and revise it instead of regenerating it. One dispatch surface over that filesystem is enough to produce 16 artifact types: web pages and React apps, PDFs, slide decks, Word documents, spreadsheets and CSV, charts and diagrams, images, video, audio, Markdown and code. In a multi-agent team the same idea becomes a shared team filesystem: a scratch space per run plus shared files kept in a persistent store, with write permissions per agent, so each specialist can only write the files its role owns.",
+      body: [
+        {
+          heading: "Real files instead of prompt memory",
+          text: "A computer-use agent shouldn't just emit text — it should write to a real filesystem inside an isolated sandbox microVM (Vercel Sandbox or E2B). Every artifact it produces is saved with a permanent storage key and lineage metadata — which earlier artifact it was derived from — so a later step, or a later session, can find it and revise it instead of regenerating it.",
+        },
+        {
+          heading: "One surface, 16 artifact types",
+          text: "One dispatch surface over that filesystem is enough to produce 16 artifact types: web pages and React apps, PDFs, slide decks, Word documents, spreadsheets and CSV, charts and diagrams, images, video, audio, Markdown and code.",
+        },
+        {
+          heading: "Shared files for a team",
+          text: "In a multi-agent team the same idea becomes a shared team filesystem: a scratch space per run plus shared files kept in a persistent store, with write permissions per agent, so each specialist can only write the files its role owns.",
+        },
+      ],
       value:
         "An agent that can only hold context in its prompt forgets what it built two steps ago. One with real file state can reference, revise and compose its own prior output — which is the difference between generating a document and generating a project.",
       guardrails: [
@@ -93,10 +119,48 @@ export const harness = {
       id: "repair",
       title: "Verify, then self-repair, on a context budget",
       icon: "TbAdjustmentsBolt",
-      body:
-        "In a single-agent loop every step's result is checked. A failed step goes to a verifier, which hands the real error back to the planner; the planner replans from that error instead of aborting. Retries are capped — two verifier passes, and an action that keeps failing the same way is dropped — so the loop can't spin forever. Errors that used to end a run now recover: a prompt past the model's context window is retried once with the newest 40% of turns, malformed tool arguments are repaired against the tool's schema, free read-only tools retry twice on network failures (paid lookups and writes never retry), and a model vendor that throws three errors in a minute is cooled for two minutes so fallback starts on a healthy one. Context is managed rather than replayed: old tool results are cleared, and when an agent reaches 70% of its context budget its history is replaced by an anchored summary — fixed sections for the task contract, files, findings with sources, decisions, failed attempts, open questions and next steps, the original task brief kept word for word, and each new summary built on the previous one, so repeated compaction doesn't wear facts away. Budgets are per run: each sub-agent run has a token budget, and a run budget counts model calls, credits and wall time — it asks the user at 90% and ends with a report at the limit instead of failing silently. Quality is measured, not assumed: a judge model grades a 20% daily sample of finished deliverables against five fixed criteria, and a new version of an agent skill must beat the current one on a golden task set before it goes live. Together, this guardrail layer cut invalid or failed agent output by 30%.",
-      value:
-        "Two fixes show why this layer matters. Summaries used to come back empty: the library passed the summariser only the last 4,000 tokens starting at a human message, and in a specialist's task that message is the brief at the very start — so long tasks silently kept only their last six messages. And the context guard read the provider's billed token count, which a multi-pass reasoning model inflates about threefold: a 26,000-token prompt looked like 82,000, and the agent was told to wrap up with its tools cut from 18 to 3 at a third of its real limit. Now the summariser reads everything it replaces and the guard measures the transcript itself. Cost per call fell too: each call marks its newest messages for prompt caching so the next call reads the earlier transcript from cache, the supervisor's tool definitions were trimmed by 12%, and removing a second model that rewrote every result saved about 34,000 tokens and 11 seconds per result — roughly 4% of all billed tokens.",
+      body: [
+        {
+          heading: "Verify, then replan",
+          text: "In a single-agent loop every step's result is checked. A failed step goes to a verifier, which hands the real error back to the planner; the planner replans from that error instead of aborting. Retries are capped — two verifier passes, and an action that keeps failing the same way is dropped — so the loop can't spin forever.",
+        },
+        {
+          heading: "Errors that recover instead of ending the run",
+          list: [
+            "A prompt past the model's context window is retried once with the newest 40% of turns.",
+            "Malformed tool arguments are repaired against the tool's schema.",
+            "Free read-only tools retry twice on network failures; paid lookups and writes never retry.",
+            "A model vendor that throws three errors in a minute is cooled for two minutes, so fallback starts on a healthy one.",
+          ],
+        },
+        {
+          heading: "Summarise context, don't replay it",
+          text: "Old tool results are cleared, and when an agent reaches 70% of its context budget its history is replaced by an anchored summary. It has fixed sections — task contract, files, findings with sources, decisions, failed attempts, open questions and next steps — keeps the original task brief word for word, and builds each new summary on the previous one, so repeated compaction doesn't wear facts away.",
+        },
+        {
+          heading: "Budgets per run",
+          text: "Each sub-agent run has a token budget, and a run budget counts model calls, credits and wall time. It asks the user at 90% and ends with a report at the limit instead of failing silently.",
+        },
+        {
+          heading: "Quality is measured, not assumed",
+          text: "A judge model grades a 20% daily sample of finished deliverables against five fixed criteria, and a new version of an agent skill must beat the current one on a golden task set before it goes live. Together, this guardrail layer cut invalid or failed agent output by 30%.",
+        },
+      ],
+      flow: {
+        caption: "What happens when a step fails",
+        steps: [
+          { label: "Step runs" },
+          { label: "Verifier", note: "reads the real error" },
+          { label: "Planner replans", note: "from that error, not from scratch" },
+          { label: "Retry", note: "capped at 2 verifier passes", branch: "Same failure again → the action is dropped and reported" },
+          { label: "Next step" },
+        ],
+      },
+      value: [
+        "Two fixes show why this layer matters. Summaries used to come back empty: the library passed the summariser only the last 4,000 tokens starting at a human message, and in a specialist's task that message is the brief at the very start — so long tasks silently kept only their last six messages.",
+        "The context guard read the provider's billed token count, which a multi-pass reasoning model inflates about threefold: a 26,000-token prompt looked like 82,000, and the agent was told to wrap up with its tools cut from 18 to 3 at a third of its real limit. Now the summariser reads everything it replaces and the guard measures the transcript itself.",
+        "Cost per call fell too: each call marks its newest messages for prompt caching so the next call reads the earlier transcript from cache, the supervisor's tool definitions were trimmed by 12%, and removing a second model that rewrote every result saved about 34,000 tokens and 11 seconds per result — roughly 4% of all billed tokens.",
+      ],
       guardrails: [
         "Capped verify-and-replan retries",
         "Anchored summaries at 70% of context — no full-history replay",
@@ -109,10 +173,40 @@ export const harness = {
       id: "provisioning",
       title: "Specialist teams under a supervisor",
       icon: "TbTopologyStar3",
-      body:
-        "For work that spans several skills, one generic agent is the wrong shape. A better one: assemble a team for the goal from a registry of specialist agent definitions — for example SEO (keyword research, SERP analysis, technical audit, on-page, backlinks) and lead generation (list building, account research) — under a supervisor agent that plans the work as tasks with dependencies, hands each task to a specialist as a written brief, and writes the final report. Specialists talk to each other through the team: when one needs something from a teammate, the question is routed to that teammate and the answer comes back before the result reaches the supervisor; past a cap, an open question becomes a stated limitation instead of a guess. Each agent works under a signed, capability-bound appointment, so it can only use the tools and files its role allows. And a result isn't accepted because an agent says it's done: a deliverable check confirms the files the task owes are actually saved, then a reviewer agent — on a model from a different vendor, because a model grading its own family's work passes failed criteria far more often — grades the work against a rubric written for that role. Work that misses goes back with the reviewer's notes.",
-      value:
-        "Narrow specialists coordinated by a supervisor beat one generic agent that's mediocre at everything — as long as every handoff between them is checked. Team formation is worth optimising too: writing every specialist's brief in one sequential model call took 54 of the 84–88 seconds a user waited; making each brief its own parallel call means the user waits for the slowest brief instead of the sum, and one failed brief no longer costs the whole team.",
+      body: [
+        {
+          heading: "Build the team from the goal",
+          text: "For work that spans several skills, one generic agent is the wrong shape. A better one: assemble a team for the goal from a registry of specialist agent definitions — for example SEO (keyword research, SERP analysis, technical audit, on-page, backlinks) and lead generation (list building, account research).",
+        },
+        {
+          heading: "A supervisor plans and delegates",
+          text: "A supervisor agent plans the work as tasks with dependencies, hands each task to a specialist as a written brief, and writes the final report. Each agent works under a signed, capability-bound appointment, so it can only use the tools and files its role allows.",
+        },
+        {
+          heading: "Agents ask each other through the team",
+          text: "When one specialist needs something from a teammate, the question is routed to that teammate and the answer comes back before the result reaches the supervisor. Past a cap, an open question becomes a stated limitation instead of a guess.",
+        },
+        {
+          heading: "\"Done\" means checked",
+          text: "A result isn't accepted because an agent says it's done. A deliverable check confirms the files the task owes are actually saved, then a reviewer agent — on a model from a different vendor, because a model grading its own family's work passes failed criteria far more often — grades the work against a rubric written for that role. Work that misses goes back with the reviewer's notes.",
+        },
+      ],
+      flow: {
+        caption: "From goal to accepted work",
+        steps: [
+          { label: "Goal" },
+          { label: "Team assembled", note: "specialists from a registry" },
+          { label: "Supervisor plans", note: "tasks with dependencies" },
+          { label: "Specialist works", note: "from a written brief", branch: "Needs a teammate → question relayed, answer returned" },
+          { label: "Deliverable check", note: "are the owed files saved?" },
+          { label: "Cross-vendor review", note: "graded against a rubric", branch: "Misses → back to the specialist with notes" },
+          { label: "Supervisor report" },
+        ],
+      },
+      value: [
+        "Narrow specialists coordinated by a supervisor beat one generic agent that's mediocre at everything — as long as every handoff between them is checked.",
+        "Team formation is worth optimising too: writing every specialist's brief in one sequential model call took 54 of the 84–88 seconds a user waited. Making each brief its own parallel call means the user waits for the slowest brief instead of the sum, and one failed brief no longer costs the whole team.",
+      ],
       guardrails: [
         "Signed, capability-bound agent appointments",
         "Deliverable check: owed files must exist",
@@ -124,10 +218,34 @@ export const harness = {
       id: "queue",
       title: "A job queue built to survive its own scale",
       icon: "TbServerBolt",
-      body:
-        "Underneath the agent layer is a Postgres job queue — SKIP LOCKED claiming, lease and heartbeat re-claim, idempotent dedupe keys — delivering at-least-once delivery with exactly-once effects. Jobs run in per-tenant lanes guarded by Postgres advisory locks, so one tenant's long job never blocks another's and two jobs in the same lane never run at once. Work is split across separate worker processes — sandbox jobs, multi-agent jobs, events, and the Slack/Telegram channel gateway — and the agent pool sleeps when idle, wakes on demand, and caps concurrent jobs at the database connections actually free. Agent runs checkpoint after every step, so a run cut off by a restart continues from its last step. Observability is Prometheus metrics, Langfuse tracing, a per-call model and sandbox cost ledger, and SSE token streaming.",
-      value:
-        "Splitting the work this way means a busy tenant never starves the others, and a stalled worker's job is reclaimed by heartbeat instead of silently disappearing. The hot path got lighter too: a live run used to renew its lease with a database write every 3 seconds (20 a minute); it now renews every 30 seconds against a 90-second lease (2 a minute), and a stop is seen immediately through a Postgres notification instead of waiting for the next write. Billing moved off the model call into a background task, so no response waits on billing.",
+      body: [
+        {
+          heading: "Claiming jobs safely",
+          text: "Underneath the agent layer is a Postgres job queue — SKIP LOCKED claiming, lease and heartbeat re-claim, idempotent dedupe keys — delivering at-least-once delivery with exactly-once effects.",
+        },
+        {
+          heading: "Lanes and separate workers",
+          text: "Jobs run in per-tenant lanes guarded by Postgres advisory locks, so one tenant's long job never blocks another's and two jobs in the same lane never run at once. Work is split across separate worker processes — sandbox jobs, multi-agent jobs, events, and the Slack/Telegram channel gateway — and the agent pool sleeps when idle, wakes on demand, and caps concurrent jobs at the database connections actually free.",
+        },
+        {
+          heading: "Recovery and observability",
+          text: "Agent runs checkpoint after every step, so a run cut off by a restart continues from its last step. Observability is Prometheus metrics, Langfuse tracing, a per-call model and sandbox cost ledger, and SSE token streaming.",
+        },
+      ],
+      flow: {
+        caption: "Life of a job",
+        steps: [
+          { label: "Job saved", note: "a dedupe key stops duplicates" },
+          { label: "Claimed", note: "SKIP LOCKED + per-tenant lane lock" },
+          { label: "Running", note: "a heartbeat keeps the lease alive", branch: "Worker dies → lease expires → another worker reclaims the job" },
+          { label: "Checkpointed", note: "after every step" },
+          { label: "Complete" },
+        ],
+      },
+      value: [
+        "Splitting the work this way means a busy tenant never starves the others, and a stalled worker's job is reclaimed by heartbeat instead of silently disappearing.",
+        "The hot path got lighter too: a live run used to renew its lease with a database write every 3 seconds (20 a minute); it now renews every 30 seconds against a 90-second lease (2 a minute), and a stop is seen immediately through a Postgres notification instead of waiting for the next write. Billing moved off the model call into a background task, so no response waits on billing.",
+      ],
       guardrails: [
         "SKIP LOCKED claiming — no two workers grab the same job",
         "Lease + heartbeat re-claim on stalled workers",
@@ -140,8 +258,31 @@ export const harness = {
       id: "retrieval",
       title: "Hybrid retrieval where dense-only search fails",
       icon: "TbSearch",
-      body:
-        "For keyword and identifier queries — where dense-only retrieval tends to confuse near-duplicate documents — the harness fuses SPLADE sparse vectors with dense vectors via reciprocal rank fusion on Qdrant. That single change lifted retrieval relevance by 27% on exactly the query class where pure embedding search struggles. Agent memory search uses the same idea on Postgres: full-text search and pgvector similarity merged by reciprocal rank fusion, so a passage still matches by its words when its embedding is missing.",
+      body: [
+        {
+          heading: "Sparse + dense, merged",
+          text: "For keyword and identifier queries — where dense-only retrieval tends to confuse near-duplicate documents — the harness fuses SPLADE sparse vectors with dense vectors via reciprocal rank fusion on Qdrant. That single change lifted retrieval relevance by 27% on exactly the query class where pure embedding search struggles.",
+        },
+        {
+          heading: "Same idea for agent memory",
+          text: "Agent memory search uses the same idea on Postgres: full-text search and pgvector similarity merged by reciprocal rank fusion, so a passage still matches by its words when its embedding is missing.",
+        },
+      ],
+      flow: {
+        caption: "One query, two searches",
+        steps: [
+          { label: "Query" },
+          {
+            label: "Two searches at once",
+            parallel: [
+              { label: "SPLADE sparse", note: "exact words and IDs" },
+              { label: "Dense vectors", note: "meaning" },
+            ],
+          },
+          { label: "RRF merge", note: "reciprocal rank fusion" },
+          { label: "Top chunks" },
+        ],
+      },
       value:
         "Semantic search is great at 'documents about X' and bad at 'the document with this exact identifier in it.' Hybrid fusion means the harness doesn't have to choose — it gets both.",
       guardrails: ["Sparse + dense fusion, not either/or", "Tuned specifically for identifier queries"],
@@ -191,7 +332,7 @@ export const focusAreas = [
     title: "Agent Harnessing",
     icon: "TbShieldBolt",
     description:
-      "The control loop around a model, not the model itself: a verify-then-self-repair cycle, progressive context loading so long tasks don't drag their full history along, and a guardrail layer that measurably cuts invalid or failed output rather than just hoping the prompt is good enough.",
+      "The control loop around a model, not the model itself: a verify-and-replan cycle, anchored context summaries so long tasks don't drag their full history along, and a guardrail layer that measurably cuts invalid or failed output rather than just hoping the prompt is good enough.",
     stack: ["LangGraph", "Guardrails", "Eval harness", "Sandboxes", "MCP"],
   },
   {
@@ -199,7 +340,7 @@ export const focusAreas = [
     title: "Distributed Backends",
     icon: "TbServerBolt",
     description:
-      "Horizontally scalable job queues and auto-scaled worker pools tuned for at-least-once delivery with exactly-once effects — the kind of infrastructure built to hold up long after the demo ends, not just to pass a load test once.",
+      "Horizontally scalable job queues and sleep/wake worker pools with per-tenant lanes tuned for at-least-once delivery with exactly-once effects — the kind of infrastructure built to hold up long after the demo ends, not just to pass a load test once.",
     stack: ["FastAPI", "PostgreSQL", "Redis", "Worker pools", "Prometheus"],
   },
   {
