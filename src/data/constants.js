@@ -437,7 +437,7 @@ export const projects = [
       "The agentic harness behind an autonomous computer-use agent: a persistent virtual filesystem generating 16 artifact types in isolated sandboxes, a verify-then-self-repair loop that cut invalid output by 30%, vertical-agent provisioning under a supervisor orchestrator, and a horizontally scalable job queue with worker pools split by job type. Hybrid RAG lifts retrieval relevance 27% on keyword and identifier queries.",
     image: process.env.PUBLIC_URL + "/images/projects/druidix.jpg",
     category: "AI/ML",
-    webapp: "https://druidix.co",
+    webapp: "https://druidx.co",
     tags: ["LangGraph", "E2B Sandbox", "Hybrid RAG", "Qdrant", "PostgreSQL", "Vertical agents"],
   },
   {
