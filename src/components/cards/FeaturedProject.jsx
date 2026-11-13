@@ -7,7 +7,7 @@ import { Chip } from "../ui/Primitives";
 /*
  * A flagship project rendered as a full-width editorial entry rather than a card.
  *
- * The previous uniform grid gave Druidix exactly as much visual weight as a
+ * The previous uniform grid gave DruidX exactly as much visual weight as a
  * browser memory game, which is the wrong signal to send a hiring manager. Here
  * the three flagship projects get real space and everything else drops to a
  * compact index below.

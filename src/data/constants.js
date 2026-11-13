@@ -31,19 +31,19 @@ export const Bio = {
 /**
  * Headline numbers. Every one is a personal outcome ("I cut / I lifted"), not a
  * product spec — "50+ LLMs routed" and "16 artifact types" read like a product
- * pitch on a personal hero, not an accomplishment, so they live on the Druidix
+ * pitch on a personal hero, not an accomplishment, so they live on the DruidX
  * project card instead, where that framing is correct.
  */
 export const metrics = [
   { value: "36", suffix: "%", label: "Faster API response", detail: "500ms → 320ms at Hashedbit" },
   { value: "30", suffix: "%", label: "Fewer invalid agent outputs", detail: "Guardrail + eval harness" },
-  { value: "27", suffix: "%", label: "Higher RAG relevance", detail: "Hybrid BM25 + dense on Qdrant" },
+  { value: "27", suffix: "%", label: "Higher RAG relevance", detail: "Hybrid SPLADE + dense on Qdrant" },
   { value: "400", suffix: "+", label: "DSA problems solved", detail: "LeetCode Knight — peak 1869" },
 ];
 
 /* ------------------------------------------------------------------ *
  * Agent harness — long-form content, published on the Blog, not the
- * home page. Grounded in the Sept resume's Druidix bullets; anything
+ * home page. Grounded in the Sept resume's DruidX bullets; anything
  * beyond that (like the walk-through framing) is presented as how the
  * system behaves, not as an additional resume claim.
  * ------------------------------------------------------------------ */
@@ -58,92 +58,94 @@ export const blogPosts = [
     slug: "engineering-the-agent-harness",
     title: "Engineering the agent harness",
     excerpt:
-      "A persistent virtual filesystem, a verify-then-self-repair loop, and the guardrail layer that cut invalid agent output by 30% — how Druidix's harness actually works.",
+      "Real file state, a verify-and-replan loop, checked handoffs between agents, and the guardrail layer that cut invalid agent output by 30% — how DruidX's harness actually works.",
     tag: "Architecture",
-    readTime: "9 min read",
-    updated: "September 2025",
+    readTime: "11 min read",
+    updated: "November 2026",
   },
 ];
 
 export const harness = {
   slug: "engineering-the-agent-harness",
   title: "Engineering the agent harness",
-  dek: "Druidix · Cognio Labs",
-  readTime: "9 min read",
-  updated: "September 2025",
+  dek: "DruidX · Cognio Labs",
+  readTime: "11 min read",
+  updated: "November 2026",
   intro:
-    "Most agent demos die on the second tool call. The harness behind Druidix is the part that makes long-horizon work actually finish: a persistent virtual filesystem so an agent has real state, a verify-then-self-repair loop with progressive context loading so it can recover mid-task, and a middleware guardrail layer that cut invalid or failed agent output by 30%. None of that is one feature — it's the plumbing underneath everything Druidix does.",
+    "Most agent demos die on the second tool call. The harness behind DruidX is the part that makes multi-step work actually finish: real file state for every agent, a verify-and-replan loop, context that is summarised instead of replayed, handoffs between agents that are checked rather than trusted, and a guardrail layer that cut invalid or failed agent output by 30%. None of that is one feature — it's the plumbing underneath both DruidX products: Computer mode, a single agent that builds files in a sandbox, and Business mode, a supervised team of specialist agents.",
   points: [
     {
       id: "filesystem",
       title: "A persistent virtual filesystem, not a scratch buffer",
       icon: "TbBoxMultiple",
       body:
-        "The computer-use agent doesn't just emit text — it writes to a persistent virtual filesystem with per-artifact metadata, running inside isolated E2B and Vercel sandboxes. That's what makes 16 distinct artifact types (PDFs, slides, docs, and more) possible from one agent: the filesystem is the shared surface every step reads and writes against, so a later step can reference what an earlier one produced without re-deriving it.",
+        "The computer-use agent doesn't just emit text — it writes to a real filesystem inside isolated Vercel Sandbox and E2B microVMs (Vercel by default). Every artifact it produces is saved with a permanent storage key and lineage metadata — which earlier artifact it was derived from — so a later step, or a later session, can find it and revise it instead of regenerating it. That's what makes 16 artifact types possible from one agent: web pages and React apps, PDFs, slide decks, Word documents, spreadsheets and CSV, charts and diagrams, images, video, audio, Markdown and code. In Business mode the same idea becomes a shared team filesystem: a scratch space per run plus shared files kept in a persistent store, with write permissions set per agent, so each specialist can only write the files its seat owns.",
       value:
         "An agent that can only hold context in its prompt forgets what it built two steps ago. One with real file state can reference, revise and compose its own prior output — which is the difference between generating a document and generating a project.",
       guardrails: [
         "Full sandbox isolation from the host",
-        "Per-artifact metadata for traceability",
-        "16 artifact types from one dispatch surface",
+        "Permanent storage key and lineage per artifact",
+        "Per-agent write permissions on shared files",
       ],
-      tags: ["E2B", "Vercel Sandbox", "Virtual filesystem", "Computer-use agent"],
+      tags: ["Vercel Sandbox", "E2B", "Virtual filesystem", "Computer-use agent"],
     },
     {
       id: "repair",
       title: "Verify, then self-repair, on a context budget",
       icon: "TbAdjustmentsBolt",
       body:
-        "Every run passes through a verify step before it's accepted, and a failed verification routes into self-repair rather than aborting. Context is loaded progressively rather than stuffed up front, so a long-running task doesn't drag its entire history into every step. Wrapping the whole loop is a middleware guardrail layer — token-budget limits plus an automated eval harness — that measurably cut invalid or failed agent output by 30%.",
+        "In Computer mode every step's result is checked. A failed step goes to a verifier, which hands the real error back to the planner; the planner replans from that error instead of aborting. Retries are capped — two verifier passes, and an action that keeps failing the same way is dropped — so the loop can't spin forever. Errors that used to end a run now recover: a prompt past the model's context window is retried once with the newest 40% of turns, malformed tool arguments are repaired against the tool's schema, free read-only tools retry twice on network failures (paid lookups and writes never retry), and a model vendor that throws three errors in a minute is cooled for two minutes so fallback starts on a healthy one. Context is managed rather than replayed: old tool results are cleared, and when an agent reaches 70% of its context budget its history is replaced by an anchored summary — fixed sections for the task contract, files, findings with sources, decisions, failed attempts, open questions and next steps, the original task brief kept word for word, and each new summary built on the previous one, so repeated compaction doesn't wear facts away. Budgets are per run: each sub-agent run has a token budget, and a run budget counts model calls, credits and wall time — it asks the owner at 90% and ends with a report at the limit instead of failing silently. Quality is measured, not assumed: a judge model grades a 20% daily sample of finished deliverables against five fixed criteria, and a new version of an agent skill must beat the current one on a golden task set before it goes live. Together, this guardrail layer cut invalid or failed agent output by 30%.",
       value:
-        "That 30% isn't a benchmark number, it's fewer runs a human has to babysit. The guardrail layer is what makes it safe to let the loop retry on its own instead of surfacing every failure to a person.",
+        "Two fixes show why this layer matters. Summaries used to come back empty: the library passed the summariser only the last 4,000 tokens starting at a human message, and in a specialist's task that message is the brief at the very start — so long tasks silently kept only their last six messages. And the context guard read the provider's billed token count, which a multi-pass reasoning model inflates about threefold: a 26,000-token prompt looked like 82,000, and the agent was told to wrap up with its tools cut from 18 to 3 at a third of its real limit. Now the summariser reads everything it replaces and the guard measures the transcript itself. Cost per call fell too: each call marks its newest messages for prompt caching so the next call reads the earlier transcript from cache, the supervisor's tool definitions were trimmed by 12%, and removing a second model that rewrote every result saved about 34,000 tokens and 11 seconds per result — roughly 4% of all billed tokens.",
       guardrails: [
-        "Token-budget ceiling enforced per step",
-        "Automated eval harness gates acceptance",
-        "Progressive context — no full-history replay",
+        "Capped verify-and-replan retries",
+        "Anchored summaries at 70% of context — no full-history replay",
+        "Per-run token, credit and time budgets",
+        "Judge model grades a 20% daily sample",
       ],
-      tags: ["Verify / self-repair", "Progressive context", "Eval harness", "Token budget"],
+      tags: ["Verify / replan", "Anchored compaction", "Run budgets", "Eval harness"],
     },
     {
       id: "provisioning",
-      title: "Vertical-agent provisioning under a supervisor",
+      title: "Goal-based specialist teams under a supervisor",
       icon: "TbTopologyStar3",
       body:
-        "Onboarding a business auto-assigns it a set of specialised sub-agents by vertical — an SEO agent, a lead-generation agent, and others — all running and inter-communicating autonomously under a supervisor orchestrator agent. The supervisor is what enforces guardrails and validation checks across the group, so specialised agents can act independently without the platform losing a single point of control.",
+        "Onboarding builds a team from the goal the owner picks — grow social media, improve SEO, find leads, collect unpaid invoices and about twenty more — drawing specialists from a registry of 300+ agent definitions, including SEO (keyword research, SERP analysis, technical audit, on-page, backlinks) and lead generation (list building, account research). A supervisor agent, Central Office, plans the work as tasks with dependencies, hands each task to a specialist as a written brief, and writes the owner's report. Specialists talk to each other through the team: when one needs something from a teammate, the question is routed to that teammate and the answer comes back before the result reaches Central Office; past a cap, an open question becomes a stated limitation instead of a guess. Each agent works under a signed, capability-bound appointment, so it can only use the tools and files its seat allows. And a result isn't accepted because an agent says it's done: a deliverable check confirms the files the task owes are actually saved, then a reviewer agent — on a model from a different vendor, because a model grading its own family's work passes failed criteria far more often — grades the work against a rubric written for that seat. Work that misses goes back with the reviewer's notes.",
       value:
-        "A business doesn't get one generic agent that's mediocre at everything — it gets several narrow agents that are good at one thing, coordinated by a supervisor instead of coordinating each other directly.",
+        "A business doesn't get one generic agent that's mediocre at everything — it gets narrow specialists coordinated by a supervisor, and every handoff between them is checked. Forming the team got faster too: the specialists' briefs used to be written in one sequential model call that took 54 of the 84–88 seconds an owner waited; now each brief is its own parallel call, so the owner waits for the slowest brief instead of the sum, and one failed brief no longer costs the whole team.",
       guardrails: [
-        "Supervisor-enforced validation checks",
-        "Per-vertical sub-agent isolation",
-        "Autonomous inter-agent communication, governed centrally",
+        "Signed, capability-bound agent appointments",
+        "Deliverable check: owed files must exist",
+        "Cross-vendor rubric review before work is accepted",
       ],
-      tags: ["Supervisor orchestrator", "Sub-agents", "Guardrails", "Validation"],
+      tags: ["Supervisor orchestrator", "Sub-agents", "Agent-to-agent relay", "Rubric review"],
     },
     {
       id: "queue",
       title: "A job queue built to survive its own scale",
       icon: "TbServerBolt",
       body:
-        "Underneath the agent layer is a horizontally scalable Postgres job queue — SKIP LOCKED claiming, lease and heartbeat re-claim, idempotent dedupe keys — delivering at-least-once delivery with exactly-once effects. Worker pools are auto-scaled, rate-limited, and split by job type: document processing, embeddings, Telegram/Slack channel adapters, and cron-triggered agent runs each get their own pool, with Prometheus and LangSmith observability plus SSE token streaming on top.",
+        "Underneath the agent layer is a Postgres job queue — SKIP LOCKED claiming, lease and heartbeat re-claim, idempotent dedupe keys — delivering at-least-once delivery with exactly-once effects. Jobs run in per-workspace lanes guarded by Postgres advisory locks, so one business's long job never blocks another's and two jobs in the same lane never run at once. Work is split across separate worker processes — computer jobs, business-agent jobs, events, and the Slack/Telegram channel gateway — and the business-agent pool sleeps when idle, wakes on demand, and caps concurrent jobs at the database connections actually free. Agent runs checkpoint after every step, so a run cut off by a restart continues from its last step. Observability is Prometheus metrics, Langfuse tracing, a per-call model and sandbox cost ledger, and SSE token streaming.",
       value:
-        "Splitting worker pools by job type means an embeddings backlog never starves a Slack adapter, and a stalled worker's job gets reclaimed by heartbeat instead of silently disappearing — the platform degrades gracefully instead of falling over.",
+        "Splitting the work this way means a busy business never starves the others, and a stalled worker's job is reclaimed by heartbeat instead of silently disappearing. The hot path got lighter too: a live run used to renew its lease with a database write every 3 seconds (20 a minute); it now renews every 30 seconds against a 90-second lease (2 a minute), and a stop is seen immediately through a Postgres notification instead of waiting for the next write. Billing moved off the model call into a background task, so no response waits on the wallet.",
       guardrails: [
         "SKIP LOCKED claiming — no two workers grab the same job",
         "Lease + heartbeat re-claim on stalled workers",
         "Idempotent dedupe keys for exactly-once effects",
+        "Per-workspace lanes with advisory locks",
       ],
-      tags: ["PostgreSQL", "SKIP LOCKED", "Worker pools", "Prometheus", "LangSmith", "SSE"],
+      tags: ["PostgreSQL", "SKIP LOCKED", "Advisory locks", "Prometheus", "Langfuse", "SSE"],
     },
     {
       id: "retrieval",
       title: "Hybrid retrieval where dense-only search fails",
       icon: "TbSearch",
       body:
-        "For keyword and identifier queries — where dense-only retrieval tends to confuse near-duplicate documents — Druidix fuses BM25/SPLADE sparse signals with dense vectors via reciprocal rank fusion on Qdrant. That single change lifted retrieval relevance by 27% on exactly the query class where pure embedding search struggles.",
+        "For keyword and identifier queries — where dense-only retrieval tends to confuse near-duplicate documents — DruidX fuses SPLADE sparse vectors with dense vectors via reciprocal rank fusion on Qdrant. That single change lifted retrieval relevance by 27% on exactly the query class where pure embedding search struggles. The business agents' own memory search uses the same idea on Postgres: full-text search and pgvector similarity merged by reciprocal rank fusion, so a passage still matches by its words when its embedding is missing.",
       value:
         "Semantic search is great at 'documents about X' and bad at 'the document with this exact identifier in it.' Hybrid fusion means the harness doesn't have to choose — it gets both.",
       guardrails: ["Sparse + dense fusion, not either/or", "Tuned specifically for identifier queries"],
-      tags: ["Hybrid RAG", "BM25 / SPLADE", "RRF", "Qdrant"],
+      tags: ["Hybrid RAG", "SPLADE", "RRF", "Qdrant", "pgvector"],
     },
   ],
 
@@ -156,18 +158,18 @@ export const harness = {
     caption: "Representative run — how the loop behaves when a step fails",
     meta: [
       ["mode", "computer-use"],
-      ["fs", "virtual (per-run)"],
+      ["fs", "virtual + persistent store"],
       ["budget", "72% of ceiling"],
       ["eval", "passed"],
     ],
     rows: [
       { t: "00.0s", node: "plan", detail: "decompose objective → 6 steps", status: "ok" },
-      { t: "00.4s", node: "retrieve", detail: "BM25 + dense → RRF → 9 chunks (qdrant)", status: "ok" },
+      { t: "00.4s", node: "retrieve", detail: "SPLADE + dense → RRF → 9 chunks (qdrant)", status: "ok" },
       { t: "01.1s", node: "fs.write", detail: "artifact/draft.md created — metadata attached", status: "ok" },
-      { t: "03.6s", node: "sandbox", detail: "e2b.spawn · lease 120s · heartbeat 10s", status: "ok" },
+      { t: "03.6s", node: "sandbox", detail: "vercel.sandbox · lease 120s · heartbeat 10s", status: "ok" },
       { t: "08.9s", node: "sandbox", detail: "render slides → exit 1 · missing asset", status: "fail" },
-      { t: "09.0s", node: "verify", detail: "eval harness rejected output → self-repair", status: "warn" },
-      { t: "10.4s", node: "repair", detail: "fetch asset · progressive context reload", status: "ok" },
+      { t: "09.0s", node: "verify", detail: "verifier → replan from the real error", status: "warn" },
+      { t: "10.4s", node: "repair", detail: "fetch asset · context compacted (anchored summary)", status: "ok" },
       { t: "16.8s", node: "sandbox", detail: "render slides → exit 0 · artifact emitted", status: "ok" },
       { t: "17.1s", node: "fs.write", detail: "artifact/deck.pdf linked to draft.md", status: "ok" },
       { t: "17.4s", node: "guard", detail: "token budget 72% of ceiling → within limit", status: "ok" },
@@ -177,7 +179,7 @@ export const harness = {
 };
 
 /* ------------------------------------------------------------------ *
- * Capability pillars — deliberately kept generic. The literal Druidix
+ * Capability pillars — deliberately kept generic. The literal DruidX
  * implementation detail (SKIP LOCKED, GDPR/Fernet, etc.) lives in
  * Experience and the Blog; this section answers "what would you hire
  * him to do", not "what did he build at one company".
@@ -232,13 +234,13 @@ export const experiences = [
       "Own the agent harness and the distributed backend beneath it, across two production products.",
     projects: [
       {
-        name: "Druidix — Agentic AI Platform",
+        name: "DruidX — Agentic AI Platform",
         bullets: [
-          "Built the agentic harness behind Druidix's autonomous computer-use agent: a persistent virtual filesystem with per-artifact metadata generating 16 artifact types (PDFs, slides, docs) in isolated E2B/Vercel sandboxes.",
-          "Designed a verify → self-repair loop with progressive context loading, wrapped in a middleware guardrail layer (token-budget limits, automated eval harness) that cut invalid/failed agent output by 30%.",
-          "Shipped a vertical-agent provisioning flow — business-type onboarding auto-assigns specialised sub-agents (SEO, lead generation) that run and inter-communicate autonomously under a supervisor orchestrator agent, with guardrails and validation checks.",
-          "Engineered a horizontally scalable Postgres job queue (SKIP LOCKED claiming, lease/heartbeat re-claim, idempotent dedupe keys) delivering at-least-once delivery with exactly-once effects across auto-scaled, rate-limited worker pools split by job type (doc-processing, embeddings, Telegram/Slack channel adapters, cron-triggered agent runs); added Prometheus + LangSmith observability and SSE token streaming.",
-          "Implemented hybrid RAG (BM25/SPLADE sparse fused with dense via RRF on Qdrant), lifting relevance by 27% on keyword/identifier queries where dense-only retrieval confused near-duplicate documents.",
+          "Built the agentic harness behind DruidX's autonomous computer-use agent: a persistent virtual filesystem with per-artifact metadata generating 16 artifact types (PDFs, slides, docs) in isolated Vercel/E2B sandboxes.",
+          "Designed a verify → replan loop with progressive context loading, wrapped in a middleware guardrail layer (per-run token/credit/time budgets, rubric review and a sampled eval judge) that cut invalid/failed agent output by 30%.",
+          "Shipped a vertical-agent provisioning flow — goal-based onboarding assigns specialised sub-agents (SEO, lead generation) from a 300+ agent registry that run and inter-communicate autonomously under a supervisor orchestrator agent, with guardrails and validation checks.",
+          "Engineered a horizontally scalable Postgres job queue (SKIP LOCKED claiming, lease/heartbeat re-claim, idempotent dedupe keys) delivering at-least-once delivery with exactly-once effects across per-workspace lanes with advisory locks and sleep/wake worker pools split by job type (computer jobs, agent jobs, events, Telegram/Slack channel gateway); added Prometheus + Langfuse observability and SSE token streaming.",
+          "Implemented hybrid RAG (SPLADE sparse fused with dense via RRF on Qdrant), lifting relevance by 27% on keyword/identifier queries where dense-only retrieval confused near-duplicate documents.",
         ],
       },
       {
@@ -255,7 +257,7 @@ export const experiences = [
       "FastAPI",
       "LangGraph",
       "LangChain",
-      "LangSmith",
+      "Langfuse",
       "PostgreSQL",
       "Qdrant",
       "Redis",
@@ -430,7 +432,7 @@ export const skills = [
 export const projects = [
   {
     id: 1,
-    title: "Druidix — Agentic AI Platform",
+    title: "DruidX — Agentic AI Platform",
     date: "2025",
     featured: true,
     description:
