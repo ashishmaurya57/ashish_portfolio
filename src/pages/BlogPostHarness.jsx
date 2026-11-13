@@ -419,7 +419,9 @@ const BlogPostHarness = () => (
         variants={stagger(0.1)}
         initial="hidden"
         whileInView="visible"
-        viewport={viewportOnce}
+        // "some", not the shared 20%: this list is several screens tall, so 20%
+        // of it can never be on screen at once and it would stay invisible.
+        viewport={{ ...viewportOnce, amount: "some" }}
       >
         {harness.points.map((point, i) => {
           const Icon = getIcon(point.icon);
